@@ -1,0 +1,77 @@
+{
+ "objects": {
+  "Altar_Buddha": {
+   "kind": "baked",
+   "albedo": "Altar_Buddha_albedo.webp",
+   "light": "Altar_Buddha_light.webp",
+   "masks": {
+    "lantern": "Altar_Buddha_mask_lantern.webp"
+   },
+   "foliage": false
+  },
+  "Altar_Candle": {
+   "kind": "baked",
+   "albedo": "Altar_Candle_albedo.webp",
+   "light": "Altar_Candle_light.webp",
+   "masks": {
+    "lantern": "Altar_Candle_mask_lantern.webp"
+   },
+   "foliage": false
+  },
+  "Altar_Floor": {
+   "kind": "baked",
+   "albedo": "Altar_Floor_albedo.webp",
+   "light": "Altar_Floor_light.webp",
+   "masks": {
+    "lantern": "Altar_Floor_mask_lantern.webp"
+   },
+   "foliage": false
+  },
+  "Altar_Incense": {
+   "kind": "baked",
+   "albedo": "Altar_Incense_albedo.webp",
+   "light": "Altar_Incense_light.webp",
+   "masks": {
+    "lantern": "Altar_Incense_mask_lantern.webp"
+   },
+   "foliage": false
+  },
+  "Altar_Mat": {
+   "kind": "baked",
+   "albedo": "Altar_Mat_albedo.webp",
+   "light": "Altar_Mat_light.webp",
+   "masks": {
+    "lantern": "Altar_Mat_mask_lantern.webp"
+   },
+   "foliage": false
+  },
+  "Altar_Candle__emit": {
+   "kind": "emissive"
+  },
+  "Altar_Incense__emit": {
+   "kind": "emissive"
+  }
+ },
+ "ambient": [
+  0.012000000104308128,
+  0.00800000037997961,
+  0.029999999329447746
+ ],
+ "encoding": {
+  "log_min": -12.0,
+  "log_range": 16.0
+ },
+ "painterly": {
+  "step": 0.9,
+  "light_cap": 2.0
+ },
+ "camera": {
+  "lens": 50.0,
+  "sensor": 36.0
+ },
+ "candle": [
+  0.13500000536441803,
+  0.08491304516792297,
+  -0.029999999329447746
+ ]
+}

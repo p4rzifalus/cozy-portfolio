@@ -1,0 +1,544 @@
+{
+ "objects": {
+  "Baseboard": {
+   "kind": "baked",
+   "albedo": "Baseboard_albedo.webp",
+   "light": "Baseboard_light.webp",
+   "masks": {},
+   "foliage": false
+  },
+  "Buddha_Figure": {
+   "kind": "baked",
+   "albedo": "Buddha_Figure_albedo.webp",
+   "light": "Buddha_Figure_light.webp",
+   "masks": {
+    "neon": "Buddha_Figure_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Ceiling": {
+   "kind": "baked",
+   "albedo": "Ceiling_albedo.webp",
+   "light": "Ceiling_light.webp",
+   "masks": {
+    "neon": "Ceiling_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Chair": {
+   "kind": "baked",
+   "albedo": "Chair_albedo.webp",
+   "light": "Chair_light.webp",
+   "masks": {
+    "neon": "Chair_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Contact_Note": {
+   "kind": "baked",
+   "albedo": "Contact_Note_albedo.webp",
+   "light": "Contact_Note_light.webp",
+   "masks": {
+    "neon": "Contact_Note_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Contact_Phone_Sticker": {
+   "kind": "baked",
+   "albedo": "Contact_Phone_Sticker_albedo.webp",
+   "light": "Contact_Phone_Sticker_light.webp",
+   "masks": {},
+   "foliage": false
+  },
+  "Corner_Plant": {
+   "kind": "baked",
+   "albedo": "Corner_Plant_albedo.webp",
+   "light": "Corner_Plant_light.webp",
+   "masks": {
+    "neon": "Corner_Plant_mask_neon.webp"
+   },
+   "foliage": true
+  },
+  "Desk": {
+   "kind": "baked",
+   "albedo": "Desk_albedo.webp",
+   "light": "Desk_light.webp",
+   "masks": {
+    "neon": "Desk_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Desk_Books": {
+   "kind": "baked",
+   "albedo": "Desk_Books_albedo.webp",
+   "light": "Desk_Books_light.webp",
+   "masks": {
+    "neon": "Desk_Books_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Desk_Plant": {
+   "kind": "baked",
+   "albedo": "Desk_Plant_albedo.webp",
+   "light": "Desk_Plant_light.webp",
+   "masks": {
+    "neon": "Desk_Plant_mask_neon.webp"
+   },
+   "foliage": true
+  },
+  "Floor": {
+   "kind": "baked",
+   "albedo": "Floor_albedo.webp",
+   "light": "Floor_light.webp",
+   "masks": {
+    "neon": "Floor_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Foreground_Plant": {
+   "kind": "baked",
+   "albedo": "Foreground_Plant_albedo.webp",
+   "light": "Foreground_Plant_light.webp",
+   "masks": {
+    "neon": "Foreground_Plant_mask_neon.webp"
+   },
+   "foliage": true
+  },
+  "Incense__emit": {
+   "kind": "emissive"
+  },
+  "Incense": {
+   "kind": "baked",
+   "albedo": "Incense_albedo.webp",
+   "light": "Incense_light.webp",
+   "masks": {
+    "neon": "Incense_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Keyboard": {
+   "kind": "baked",
+   "albedo": "Keyboard_albedo.webp",
+   "light": "Keyboard_light.webp",
+   "masks": {
+    "neon": "Keyboard_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Lamp__emit": {
+   "kind": "emissive"
+  },
+  "Lamp": {
+   "kind": "baked",
+   "albedo": "Lamp_albedo.webp",
+   "light": "Lamp_light.webp",
+   "masks": {
+    "neon": "Lamp_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Laptop": {
+   "kind": "baked",
+   "albedo": "Laptop_albedo.webp",
+   "light": "Laptop_light.webp",
+   "masks": {
+    "neon": "Laptop_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Laptop_Stand": {
+   "kind": "baked",
+   "albedo": "Laptop_Stand_albedo.webp",
+   "light": "Laptop_Stand_light.webp",
+   "masks": {
+    "neon": "Laptop_Stand_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Mug": {
+   "kind": "baked",
+   "albedo": "Mug_albedo.webp",
+   "light": "Mug_light.webp",
+   "masks": {
+    "neon": "Mug_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Music_Cabinet": {
+   "kind": "baked",
+   "albedo": "Music_Cabinet_albedo.webp",
+   "light": "Music_Cabinet_light.webp",
+   "masks": {
+    "neon": "Music_Cabinet_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Neon_Backboard": {
+   "kind": "baked",
+   "albedo": "Neon_Backboard_albedo.webp",
+   "light": "Neon_Backboard_light.webp",
+   "masks": {
+    "neon": "Neon_Backboard_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Neon_Cable": {
+   "kind": "baked",
+   "albedo": "Neon_Cable_albedo.webp",
+   "light": "Neon_Cable_light.webp",
+   "masks": {
+    "neon": "Neon_Cable_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Poster_01": {
+   "kind": "baked",
+   "albedo": "Poster_01_albedo.webp",
+   "light": "Poster_01_light.webp",
+   "masks": {
+    "neon": "Poster_01_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Record_Player": {
+   "kind": "baked",
+   "albedo": "Record_Player_albedo.webp",
+   "light": "Record_Player_light.webp",
+   "masks": {
+    "neon": "Record_Player_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Shelf_Decor_01": {
+   "kind": "baked",
+   "albedo": "Shelf_Decor_01_albedo.webp",
+   "light": "Shelf_Decor_01_light.webp",
+   "masks": {},
+   "foliage": false
+  },
+  "Shelf_Decor_02": {
+   "kind": "baked",
+   "albedo": "Shelf_Decor_02_albedo.webp",
+   "light": "Shelf_Decor_02_light.webp",
+   "masks": {
+    "neon": "Shelf_Decor_02_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Shelf_Decor_03": {
+   "kind": "baked",
+   "albedo": "Shelf_Decor_03_albedo.webp",
+   "light": "Shelf_Decor_03_light.webp",
+   "masks": {
+    "neon": "Shelf_Decor_03_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Shelf_Item_Books": {
+   "kind": "baked",
+   "albedo": "Shelf_Item_Books_albedo.webp",
+   "light": "Shelf_Item_Books_light.webp",
+   "masks": {
+    "neon": "Shelf_Item_Books_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Shelf_Projects": {
+   "kind": "baked",
+   "albedo": "Shelf_Projects_albedo.webp",
+   "light": "Shelf_Projects_light.webp",
+   "masks": {
+    "neon": "Shelf_Projects_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Sticker_01": {
+   "kind": "baked",
+   "albedo": "Sticker_01_albedo.webp",
+   "light": "Sticker_01_light.webp",
+   "masks": {
+    "neon": "Sticker_01_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Sticker_02": {
+   "kind": "baked",
+   "albedo": "Sticker_02_albedo.webp",
+   "light": "Sticker_02_light.webp",
+   "masks": {
+    "neon": "Sticker_02_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Sticker_03": {
+   "kind": "baked",
+   "albedo": "Sticker_03_albedo.webp",
+   "light": "Sticker_03_light.webp",
+   "masks": {},
+   "foliage": false
+  },
+  "Sticker_04": {
+   "kind": "baked",
+   "albedo": "Sticker_04_albedo.webp",
+   "light": "Sticker_04_light.webp",
+   "masks": {
+    "neon": "Sticker_04_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Sticker_05": {
+   "kind": "baked",
+   "albedo": "Sticker_05_albedo.webp",
+   "light": "Sticker_05_light.webp",
+   "masks": {
+    "neon": "Sticker_05_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Vinyl_Records": {
+   "kind": "baked",
+   "albedo": "Vinyl_Records_albedo.webp",
+   "light": "Vinyl_Records_light.webp",
+   "masks": {
+    "neon": "Vinyl_Records_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Wall_Back": {
+   "kind": "baked",
+   "albedo": "Wall_Back_albedo.webp",
+   "light": "Wall_Back_light.webp",
+   "masks": {
+    "neon": "Wall_Back_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Wall_Left": {
+   "kind": "baked",
+   "albedo": "Wall_Left_albedo.webp",
+   "light": "Wall_Left_light.webp",
+   "masks": {
+    "neon": "Wall_Left_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Wall_Right": {
+   "kind": "baked",
+   "albedo": "Wall_Right_albedo.webp",
+   "light": "Wall_Right_light.webp",
+   "masks": {
+    "neon": "Wall_Right_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Wall_Shelf_01": {
+   "kind": "baked",
+   "albedo": "Wall_Shelf_01_albedo.webp",
+   "light": "Wall_Shelf_01_light.webp",
+   "masks": {
+    "neon": "Wall_Shelf_01_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Wall_Shelf_Brackets": {
+   "kind": "baked",
+   "albedo": "Wall_Shelf_Brackets_albedo.webp",
+   "light": "Wall_Shelf_Brackets_light.webp",
+   "masks": {
+    "neon": "Wall_Shelf_Brackets_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Window": {
+   "kind": "baked",
+   "albedo": "Window_albedo.webp",
+   "light": "Window_light.webp",
+   "masks": {
+    "neon": "Window_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Window_Blinds": {
+   "kind": "baked",
+   "albedo": "Window_Blinds_albedo.webp",
+   "light": "Window_Blinds_light.webp",
+   "masks": {
+    "neon": "Window_Blinds_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "Windowsill": {
+   "kind": "baked",
+   "albedo": "Windowsill_albedo.webp",
+   "light": "Windowsill_light.webp",
+   "masks": {
+    "neon": "Windowsill_mask_neon.webp"
+   },
+   "foliage": false
+  },
+  "City_Backdrop": {
+   "kind": "emissive"
+  },
+  "Laptop_Screen": {
+   "kind": "emissive"
+  },
+  "Neon_Sign": {
+   "kind": "emissive"
+  },
+  "Project_01": {
+   "kind": "plain"
+  },
+  "Project_02": {
+   "kind": "plain"
+  }
+ },
+ "ambient": [
+  0.09799999874830245,
+  0.055999997794628165,
+  0.30799999308586123
+ ],
+ "encoding": {
+  "log_min": -12.0,
+  "log_range": 16.0
+ },
+ "painterly": {
+  "step": 0.9,
+  "light_cap": 2.0,
+  "jitter": [
+   1.4,
+   -0.7
+  ],
+  "albedo_var": [
+   0.5,
+   0.72
+  ]
+ },
+ "view": {
+  "transform": "AgX",
+  "look": "AgX - Punchy",
+  "exposure": 1.149999976158142
+ },
+ "cameras": {
+  "Camera_01_Main": {
+   "lens": 40.0,
+   "sensor": 36.0,
+   "fit": "HORIZONTAL"
+  },
+  "Camera_02_Shelf": {
+   "lens": 40.0,
+   "sensor": 36.0,
+   "fit": "HORIZONTAL"
+  }
+ },
+ "emissive_source": {
+  "M_Lamp_Bulb": "lamp",
+  "T_Laptop_Screen": "screen",
+  "M_Lantern_Glass_Lit": "lantern",
+  "M_Neon_Flicker": "paw",
+  "M_Neon_Halo_Flicker": "paw",
+  "M_Neon_Pink": "neon"
+ },
+ "flicker": {
+  "loop_s": 4.0,
+  "fps": 24,
+  "lamp": {
+   "interp": "smooth",
+   "keys": [
+    [
+     1,
+     1.0
+    ],
+    [
+     30,
+     0.95
+    ],
+    [
+     52,
+     0.9
+    ],
+    [
+     70,
+     0.97
+    ],
+    [
+     96,
+     1.0
+    ]
+   ]
+  },
+  "screen": {
+   "interp": "step",
+   "keys": [
+    [
+     1,
+     1.0
+    ],
+    [
+     22,
+     0.82
+    ],
+    [
+     40,
+     1.08
+    ],
+    [
+     63,
+     0.9
+    ],
+    [
+     80,
+     1.0
+    ]
+   ]
+  },
+  "paw": {
+   "interp": "step",
+   "keys": [
+    [
+     1,
+     1
+    ],
+    [
+     30,
+     0.05
+    ],
+    [
+     31,
+     1
+    ],
+    [
+     33,
+     0.1
+    ],
+    [
+     35,
+     1
+    ],
+    [
+     74,
+     0.0
+    ],
+    [
+     77,
+     0.6
+    ],
+    [
+     78,
+     0.0
+    ],
+    [
+     80,
+     1
+    ]
+   ]
+  },
+  "neon": {
+   "follows": "paw",
+   "formula": "0.85 + 0.15 * paw"
+  },
+  "lantern": {
+   "noise": 0.18,
+   "period_frames": 6
+  }
+ }
+}

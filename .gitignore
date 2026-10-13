@@ -1,0 +1,6 @@
+node_modules
+dist
+*.tsbuildinfo
+.DS_Store
+# dev-only: old city variants for side-by-side comparison (no longer used by the code)
+public/city_variants
