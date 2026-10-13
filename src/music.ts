@@ -202,3 +202,23 @@ function impulse(ctx: AudioContext, seconds: number) {
   }
   return b;
 }
+
+// --- lamp switch: a short dry click (two tiny noise bursts through a band-pass), no files
+let fx: AudioContext | null = null;
+export function switchClick() {
+  try {
+    fx ??= new AudioContext();
+    const ctx = fx, t0 = ctx.currentTime;
+    for (const [dt, gain, f] of [[0, 0.5, 2600], [0.045, 0.25, 1800]] as const) {
+      const n = Math.floor(ctx.sampleRate * 0.012);
+      const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = f; bp.Q.value = 1.2;
+      const g = ctx.createGain(); g.gain.value = gain * VOLUME;
+      src.connect(bp); bp.connect(g); g.connect(ctx.destination);
+      src.start(t0 + dt);
+    }
+  } catch { /* no audio: fine */ }
+}

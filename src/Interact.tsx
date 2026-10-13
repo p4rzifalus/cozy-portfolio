@@ -3,7 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { HOTSPOTS } from "./content";
 import { store } from "./store";
-import { toggleMusic } from "./music";
+import { toggleMusic, switchClick } from "./music";
 import { GRADE } from "./painterly";
 
 // Hover, click and the render loop of the site.
@@ -22,6 +22,7 @@ export const view = {
   fog: 0,                 // fade to black during the flight room <-> altar (1 = black, the cut happens there)
   atAltar: false,         // the camera is in the meditation scene
   altarExposure: 1,       // exposure multiplier there
+  bookVeil: 0,            // the book of the desk flies to the camera (Book.tsx): darken the room behind it
 };
 
 if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__view = view;
@@ -131,6 +132,9 @@ export default function Interact({ scene }: { scene: THREE.Object3D }) {
       else if (a === "contacts") store.set({ mode: { kind: "contacts" }, hovered: null });
       else if (a === "meditation") store.set({ mode: { kind: "meditation" }, hovered: null });
       else if (a === "music") toggleMusic();
+      else if (a === "lamp") { store.set({ lamp: !s.lamp }); switchClick(); }
+      else if (a === "laptop") store.set({ mode: { kind: "laptop" }, hovered: null });
+      else if (a === "book") store.set({ mode: { kind: "book" }, hovered: null });
     };
     el.addEventListener("pointermove", move);
     el.addEventListener("pointerleave", leave);
@@ -181,7 +185,7 @@ export default function Interact({ scene }: { scene: THREE.Object3D }) {
       if (id !== s.hovered) store.set({ hovered: id });
     }
     const hovered = store.get().hovered;
-    gl.domElement.style.cursor = hovered ? "pointer" : s.mode.kind === "project" ? "grab" : s.mode.kind === "meditation" ? "default" : "";
+    gl.domElement.style.cursor = hovered ? "pointer" : s.mode.kind === "project" ? "grab" : "";
     // outline fades in and out; while fading out it keeps the last hotspot
     if (hovered) passes.shown = hovered;
     passes.amount += ((hovered ? 1 : 0) - passes.amount) * (1 - Math.exp(-dt * 12));
@@ -195,9 +199,10 @@ export default function Interact({ scene }: { scene: THREE.Object3D }) {
     gl.render(root, camera);
     gl.autoClear = false;
 
-    // --- inspected project on top of a dark veil
-    if (view.inspected && view.veil > 0.001) {
-      (passes.veil.material as THREE.ShaderMaterial).uniforms.amount.value = view.veil;
+    // --- inspected project / flying book on top of a dark veil
+    const veil = Math.max(view.inspected ? view.veil : 0, view.bookVeil);
+    if (veil > 0.001) {
+      (passes.veil.material as THREE.ShaderMaterial).uniforms.amount.value = veil;
       gl.render(passes.veil, passes.ortho);
       gl.clearDepth();
       camera.layers.set(INSPECT_LAYER);

@@ -1,9 +1,12 @@
-# Build the site and publish it to GitHub Pages on every push to main.
+# Build the site and publish it to GitHub Pages on every push to main,
+# and once a day: the book on the desk shows the latest posts of the Telegram channel (scripts/tg-snapshot.mjs).
 name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"
 permissions:
   contents: read
   pages: write

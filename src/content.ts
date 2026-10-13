@@ -1,14 +1,28 @@
 // Texts of the site. Pasha edits this file: project cards, contacts, labels on hover.
 
 // Clickable objects of the room. Key = object name in room.glb; parts = objects that light up together on hover.
-export type Action = "project" | "contacts" | "music" | "meditation";
+export type Action = "project" | "contacts" | "music" | "meditation" | "lamp" | "laptop" | "book";
 export const HOTSPOTS: Record<string, { label: string; hint: string; parts: string[]; action: Action }> = {
   Project_01: { label: "Jack's Lantern", hint: "открыть проект", parts: ["Project_01"], action: "project" },
   Project_02: { label: "cyber-sigil", hint: "открыть проект", parts: ["Project_02"], action: "project" },
   Contact_Note: { label: "Контакты", hint: "написать мне", parts: ["Contact_Note", "Contact_Phone_Sticker"], action: "contacts" },
   Record_Player: { label: "Проигрыватель", hint: "включить музыку", parts: ["Record_Player"], action: "music" },
   Incense: { label: "Благовония", hint: "режим медитации", parts: ["Incense", "Incense__emit"], action: "meditation" },
+  Lamp: { label: "Лампа", hint: "выключить свет", parts: ["Lamp", "Lamp__emit"], action: "lamp" },
+  Laptop: { label: "Ноутбук", hint: "резюме и портфолио", parts: ["Laptop", "Laptop_Screen", "Laptop_Stand"], action: "laptop" },
+  // the top book of the stack on the desk is cut out of Desk_Books on the site (Book.tsx)
+  Desk_Book_Top: { label: "Пиксели души", hint: "мой телеграм-канал", parts: ["Desk_Book_Top"], action: "book" },
 };
+
+// Icons on the laptop screen. TODO(Pasha): real links. A file (resume PDF) -> put it into site/public/ and write
+// its name as url without a leading slash, e.g. "resume.pdf".
+export const LAPTOP_LINKS: { label: string; note: string; url: string; icon: "pdf" | "behance" | "dribbble" | "linkedin" | "github" | "web" }[] = [
+  { label: "Резюме.pdf", note: "опыт, навыки, контакты", url: "resume.pdf", icon: "pdf" },
+  { label: "Behance", note: "кейсы целиком", url: "https://www.behance.net/username", icon: "behance" },
+  { label: "Dribbble", note: "шоты и анимации", url: "https://dribbble.com/username", icon: "dribbble" },
+  { label: "LinkedIn", note: "профиль", url: "https://www.linkedin.com/in/username", icon: "linkedin" },
+];
+export const LAPTOP_TITLE = "Паша — senior UX/UI-дизайнер";
 
 export interface Project {
   title: string;

@@ -6,15 +6,20 @@ export type Mode =
   | { kind: "room" }
   | { kind: "project"; id: string }
   | { kind: "contacts" }
-  | { kind: "meditation" };
+  | { kind: "meditation" }
+  | { kind: "laptop" }     // camera leans to the laptop, links on its screen
+  | { kind: "book" };      // the top book of the desk stack flies up and opens: Telegram channel
 
 export interface State {
   hovered: string | null;   // hotspot id (see HOTSPOTS in content.ts)
   mode: Mode;
   music: boolean;
+  lamp: boolean;           // desk lamp on
+  bookOpen: boolean;       // the HTML book has replaced the 3D one in front of the camera (Book.tsx <-> Overlay.tsx)
+  laptopReady: boolean;    // the camera arrived at the laptop: show the screen UI
 }
 
-let state: State = { hovered: null, mode: { kind: "room" }, music: false };
+let state: State = { hovered: null, mode: { kind: "room" }, music: false, lamp: true, bookOpen: false, laptopReady: false };
 const subs = new Set<() => void>();
 
 export const store = {

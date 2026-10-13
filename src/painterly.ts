@@ -2,6 +2,8 @@ import * as THREE from "three";
 
 // Same look as the "Painterly" node group in Blender (blender/scripts/style.py), but light comes from baked maps:
 //   light  = max(0, lightmap + sum_i (k_i - 1) * mask_i) + ambient        (maps are log-encoded: v = 2^(c*range + min))
+//   lamp slot is different: it holds the lightmap with the lamp OFF -> lightmap + (k_lamp - 1) * (lightmap - off),
+//   so the switch (k_lamp 1 -> 0) lands exactly on the lamp-off bake (a subtracted mask left colour noise)
 //   value  = 2^snap(log2(V) + (noise - 0.5)*jitter, step, soft)  capped at lightCap  (V = brightness of the light, hue kept)
 //   colour = albedo * (0.97 + (noise - 0.5)*albedoVar) * light'
 // Blender's Painterly: step 0.9, jitter 1.4, soft 0 (hard), albedoVar 0.5 — the site uses a calmer PAINT (see below).
@@ -117,7 +119,7 @@ const frag = /* glsl */ `
     if (foliage && al.a < 0.5) discard;
     vec4 lm = texture2D(lightMap, vUv);
     vec3 L = decode(lm.rgb);
-    L += (k.x - 1.0) * hasMask.x * decode(texture2D(mask0, vUv).rgb);
+    L += (k.x - 1.0) * hasMask.x * (L - decode(texture2D(mask0, vUv).rgb));
     L += (k.y - 1.0) * hasMask.y * decode(texture2D(mask1, vUv).rgb);
     L += (k.z - 1.0) * hasMask.z * decode(texture2D(mask2, vUv).rgb);
     L += (k.w - 1.0) * hasMask.w * decode(texture2D(mask3, vUv).rgb);

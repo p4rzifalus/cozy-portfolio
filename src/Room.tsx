@@ -10,6 +10,8 @@ import Interact, { view } from "./Interact";
 import Inspect from "./Inspect";
 import Meditation from "./Meditation";
 import { store } from "./store";
+import Book, { splitTopBook } from "./Book";
+import Laptop from "./Laptop";
 
 const BASE = import.meta.env.BASE_URL + "room/";
 // detailed pictures: the brush-stroke noise on top of them reads as a second, overlapping image -> no strokes
@@ -86,7 +88,7 @@ export default function Room() {
   const [plaster, relief, decals] = useLoader(THREE.TextureLoader, ["plaster", "relief", "decals"].map((f) => BASE + "walls/" + f + ".webp"));
 
   // materials: baked objects -> Painterly shader; self-lit parts keep their glTF materials (flicker via emissiveIntensity)
-  const { shaders, emissive } = useMemo(() => {
+  const { shaders, emissive, bulbs } = useMemo(() => {
     const bmp: Record<string, ImageBitmap> = {};
     files.forEach((f, i) => (bmp[f] = bitmaps[i]));
     const shaders: THREE.ShaderMaterial[] = [];
@@ -126,6 +128,7 @@ export default function Room() {
       }
     }
     const emissive: { mat: THREE.MeshStandardMaterial; base: number; src: string }[] = [];
+    const bulbs: { mat: THREE.MeshStandardMaterial; base: number }[] = [];
     gltf.scene.traverse((o) => {
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
@@ -139,15 +142,25 @@ export default function Room() {
       const src = site.emissive_source[m.name];
       // only the neon sign flickers (Pasha, 2026-10-13): lamp, screen and lantern stay steady
       if (src === "paw" && m.emissiveIntensity !== undefined) emissive.push({ mat: m, base: m.emissiveIntensity, src });
+      if (src === "lamp" && m.emissiveIntensity !== undefined && !bulbs.some((b) => b.mat === m)) bulbs.push({ mat: m, base: m.emissiveIntensity });
     });
-    return { shaders, emissive };
+    // the top book of the desk stack becomes its own clickable object (after the materials: it keeps the stack's)
+    const books = site.objects.Desk_Books as BakedInfo | undefined;
+    if (books) splitTopBook(gltf.scene, BASE + books.albedo, gltf.scene.getObjectByName("Camera_01_Main")!.getWorldPosition(new THREE.Vector3()));
+    return { shaders, emissive, bulbs };
   }, [gltf, bitmaps, plaster, relief, decals]);
 
-  // flicker of the neon sign only: its baked light mask + the paw tubes
-  useFrame(({ clock }) => {
+  // flicker of the neon sign only: its baked light mask + the paw tubes. Lamp switch: lamp slot of the shader (lamp-off bake).
+  const lamp = useRef({ on: true, k: 1, since: 99 });
+  useFrame(({ clock }, dt) => {
     const k = flickerAt(site.flicker, clock.elapsedTime);
-    for (const s of shaders) (s.uniforms.k.value as THREE.Vector4).set(1, 1, k.neon, 1);
+    const L = lamp.current, on = store.get().lamp;
+    if (on !== L.on) { L.on = on; L.since = 0; }
+    L.since += dt;
+    L.k = on ? lampOn(L.since) : L.k * Math.exp(-dt * 30);
+    for (const s of shaders) (s.uniforms.k.value as THREE.Vector4).set(L.k, 1, k.neon, 1);
     for (const e of emissive) e.mat.emissiveIntensity = e.base * (k as Record<string, number>)[e.src];
+    for (const b of bulbs) b.mat.emissiveIntensity = b.base * L.k;
   });
 
   const lantern = gltf.scene.getObjectByName("Project_01");
@@ -162,10 +175,23 @@ export default function Room() {
       <ambientLight intensity={0.25} color={"#6a5cff"} />
       {lantern && <pointLight position={lantern.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.2, 0.2))} intensity={0.6} distance={1.5} color={"#ff8a3a"} />}
       <CameraRig gltf={gltf} lens={site.cameras.Camera_01_Main.lens} sensor={site.cameras.Camera_01_Main.sensor} />
+      {/* run after the rig (priority 0.1): lean towards the laptop; the desk book flies in front of the camera */}
+      <Laptop scene={gltf.scene} />
+      <Book />
       {/* after the rig: while meditating it owns the camera (flight through the smoke, the altar scene) */}
       <Suspense fallback={null}><Meditation room={gltf.scene} /></Suspense>
     </>
   );
+}
+
+// switching the lamp on: an old bulb catches with a couple of blinks, then settles (s since the click -> brightness 0..1)
+const LAMP_ON: [number, number][] = [[0, 0], [0.04, 0.55], [0.08, 0.12], [0.13, 0.85], [0.17, 0.45], [0.22, 0.9], [0.4, 1]];
+function lampOn(t: number) {
+  for (let i = 0; i < LAMP_ON.length - 1; i++) {
+    const [t0, v0] = LAMP_ON[i], [t1, v1] = LAMP_ON[i + 1];
+    if (t < t1) return v0 + (v1 - v0) * ((t - t0) / (t1 - t0));
+  }
+  return 1;
 }
 
 // Camera 1 -> camera 2 is only a turn of the head (same point). While the cursor is near the right edge the head slowly
