@@ -219,16 +219,6 @@
   .music-badge { bottom: auto; top: 14px; }
 }
 
-/* "show all": a label over every clickable object */
-.reveal-labels { position: fixed; inset: 0; pointer-events: none; }
-.reveal-label {
-  position: fixed; left: 0; top: 0; opacity: 0; will-change: transform, opacity; transition: opacity 0.2s;
-}
-.reveal-label b {
-  display: block; transform: translate(-50%, calc(-100% - 10px)); padding: 4px 10px; border-radius: 99px; white-space: nowrap;
-  background: var(--plum); border: 1px solid rgba(255, 227, 179, 0.45); font: 600 13px var(--serif); color: #ffe3b3;
-}
-
 /* phones: offer the gyroscope once */
 .gyro-hint {
   position: fixed; left: 12px; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); display: flex; flex-wrap: wrap; align-items: center;

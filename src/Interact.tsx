@@ -27,8 +27,6 @@ export const view = {
 
 if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__view = view;
 const OUTLINE = { color: new THREE.Color("#ffe3b3"), radius: 4.0, fill: 0.1 };
-// "show all" (menu): labels over every hotspot, moved here every frame (Overlay.tsx registers the elements)
-export const revealLabels = { els: {} as Record<string, HTMLElement | null> };
 
 const quadVert = /* glsl */ `
   varying vec2 vUv;
@@ -158,29 +156,6 @@ export default function Interact({ scene }: { scene: THREE.Object3D }) {
     return hit ? hotspotOf(hit.object) : null;
   }
 
-  // labels of "show all": above the top of each hotspot, hidden when off screen or behind the camera
-  const tmp = useMemo(() => ({ box: new THREE.Box3(), v: new THREE.Vector3() }), []);
-  function placeRevealLabels(amount: number) {
-    for (const [id, meshes] of Object.entries(partsOf)) {
-      const el = revealLabels.els[id];
-      if (!el) continue;
-      if (amount < 0.01 || !meshes.length) { el.style.opacity = "0"; continue; }
-      tmp.box.makeEmpty();
-      for (const m of meshes) tmp.box.expandByObject(m);
-      // visible = the centre is on screen; the label goes above the top, kept inside the screen (below the menu)
-      tmp.box.getCenter(tmp.v);
-      tmp.v.project(camera);
-      const on = tmp.v.z < 1 && Math.abs(tmp.v.x) < 0.97 && Math.abs(tmp.v.y) < 0.97;
-      tmp.box.getCenter(tmp.v);
-      tmp.v.y = tmp.box.max.y;
-      tmp.v.project(camera);
-      el.style.opacity = on ? String(amount) : "0";
-      const x = THREE.MathUtils.clamp((tmp.v.x * 0.5 + 0.5) * size.width, 70, size.width - 70);
-      const y = THREE.MathUtils.clamp((-tmp.v.y * 0.5 + 0.5) * size.height, 100, size.height - 20);
-      el.style.transform = `translate(${x}px, ${y}px)`;
-    }
-  }
-
   // render targets and full-screen passes
   const passes = useMemo(() => {
     const mask = new THREE.WebGLRenderTarget(1, 1, { depthBuffer: true });
@@ -270,8 +245,6 @@ export default function Interact({ scene }: { scene: THREE.Object3D }) {
       (passes.outline.material as THREE.ShaderMaterial).uniforms.amount.value = Math.max(passes.amount, passes.reveal);
       gl.render(passes.outline, passes.ortho);
     } else if (!hovered) passes.shown = null;
-
-    placeRevealLabels(passes.reveal);
 
     // --- smoke curtain of the flight room <-> altar
     if (view.fog > 0.001) {

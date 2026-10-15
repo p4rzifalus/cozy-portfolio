@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { HOTSPOTS, MENU, MenuAction } from "./content";
+import { MENU, MenuAction } from "./content";
 import { store, useStore } from "./store";
 import { toggleMusic, switchClick } from "./music";
 import { enableGyro, hasGyro, rig } from "./Room";
-import { revealLabels } from "./Interact";
 
-// Menu of the site + labels of "show all" (Interact.tsx moves them over the objects every frame).
+// Menu of the site. "Show all" = outline of every clickable object (Interact.tsx), no labels (Pasha, 2026-10-15).
 const UI = import.meta.env.BASE_URL + "ui/";
 
 // placeholder line icons until the generated ones are in site/public/ui/
@@ -71,11 +70,6 @@ export default function Menu() {
           </button>
         ))}
       </nav>
-      <div className="reveal-labels">
-        {Object.entries(HOTSPOTS).map(([id, h]) => (
-          <div key={id} ref={(el) => { revealLabels.els[id] = el; }} className="reveal-label"><b>{h.label}</b></div>
-        ))}
-      </div>
     </>
   );
 }

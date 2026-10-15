@@ -206,8 +206,10 @@ export const VIEW = { from: 1100, to: 1800, wideFov: 58 };
 export const TURN = { zone: 0.3, speed: 0.4, accel: 4.0, soft: 0.1 };
 // Phone: GYRO.gain = camera turn per phone turn (1 = turn the phone by the same angle as the head, like a window into the room),
 // pitch = phone tilt (rad) for the full up/down parallax. Touch drag: `drag` = turn per screen width.
+// ZOOM: two fingers zoom in (up to `max`) inside the usual frame; one finger then pans, past the frame edge it turns the head.
 export const GYRO = { gain: 1.3, pitch: 0.35, smooth: 8 };
 export const TOUCH = { drag: 1.6 };
+export const ZOOM = { max: 3 };
 // menu buttons: turn the head to a given position (0 = desk, 1 = shelf); the rig eases there and lets go
 export const rig = { target: null as number | null };
 
@@ -238,24 +240,63 @@ export const hasGyro = () => typeof window !== "undefined" && "DeviceOrientation
 function CameraRig({ gltf, lens, sensor }: { gltf: { scene: THREE.Object3D }; lens: number; sensor: number }) {
   const { camera, size } = useThree();
   // cursor over the whole window (also over future UI cards), -1..1
-  const mouse = useRef({ x: 0, y: 0, inside: false, drag: 0, dragX: null as number | null });
+  const mouse = useRef({ x: 0, y: 0, inside: false, drag: 0 });
+  // touch zoom: z = magnification, cx/cy = centre of the visible part of the normal frame (0..1, y from the top)
+  const zs = useRef({ z: 1, cx: 0.5, cy: 0.5 });
+  const touches = useRef(new Map<number, { x: number; y: number }>());
   // phone orientation (raw, smoothed in useFrame); ref = heading that corresponds to the current turn
   const phone = useRef({ heading: 0, pitch: 0, ok: false, ref: null as number | null, pitch0: 0 });
   useEffect(() => {
+    const free = () => store.get().mode.kind === "room";
+    // one finger: the picture follows the finger; what does not fit into the zoomed frame turns the head
+    const pan = (dx: number, dy: number) => {
+      const z = zs.current, W = window.innerWidth, H = window.innerHeight, lo = 0.5 / z.z, hi = 1 - lo;
+      let cx = z.cx - dx / W / z.z, over = 0;
+      if (cx < lo) { over = cx - lo; cx = lo; } else if (cx > hi) { over = cx - hi; cx = hi; }
+      z.cx = cx;
+      z.cy = THREE.MathUtils.clamp(z.cy - dy / H / z.z, lo, hi);
+      mouse.current.drag += over * TOUCH.drag;
+    };
+    // two fingers: zoom around the point between them, and pan with it
+    const pinch = (a0: { x: number; y: number }, b0: { x: number; y: number }, a1: { x: number; y: number }, b1: { x: number; y: number }) => {
+      const z = zs.current, W = window.innerWidth, H = window.innerHeight;
+      const d0 = Math.hypot(a0.x - b0.x, a0.y - b0.y), d1 = Math.hypot(a1.x - b1.x, a1.y - b1.y);
+      if (d0 < 1) return;
+      const mx = (a1.x + b1.x) / 2 / W, my = (a1.y + b1.y) / 2 / H;
+      const pmx = (a0.x + b0.x) / 2 / W, pmy = (a0.y + b0.y) / 2 / H;
+      const px = z.cx + (pmx - 0.5) / z.z, py = z.cy + (pmy - 0.5) / z.z;     // frame point under the fingers
+      z.z = THREE.MathUtils.clamp(z.z * (d1 / d0), 1, ZOOM.max);
+      const lo = 0.5 / z.z, hi = 1 - lo;
+      z.cx = THREE.MathUtils.clamp(px - (mx - 0.5) / z.z, lo, hi);
+      z.cy = THREE.MathUtils.clamp(py - (my - 0.5) / z.z, lo, hi);
+    };
     const on = (e: PointerEvent) => {
       if (e.pointerType === "touch") {
-        // finger: drag sideways turns the head (no edges, no parallax)
-        const m = mouse.current;
-        if (m.dragX !== null) m.drag += ((m.dragX - e.clientX) / window.innerWidth) * TOUCH.drag;
-        m.dragX = e.clientX;
+        const t = touches.current, prev = t.get(e.pointerId);
+        if (!prev) return;
+        const cur = { x: e.clientX, y: e.clientY };
+        if (free()) {
+          if (t.size === 1) pan(cur.x - prev.x, cur.y - prev.y);
+          else if (t.size === 2) {
+            const other = [...t.entries()].find(([id]) => id !== e.pointerId)![1];
+            pinch(prev, other, cur, other);
+          }
+        }
+        t.set(e.pointerId, cur);
         return;
       }
       mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouse.current.y = -((e.clientY / window.innerHeight) * 2 - 1);
       mouse.current.inside = true;
     };
-    const down = (e: PointerEvent) => { if (e.pointerType === "touch") mouse.current.dragX = e.clientX; };
-    const up = () => { mouse.current.dragX = null; };
+    // only fingers that start on the room (not on the menu or a card)
+    const down = (e: PointerEvent) => {
+      if (e.pointerType === "touch" && e.target instanceof HTMLCanvasElement) touches.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    };
+    const up = (e: PointerEvent) => { touches.current.delete(e.pointerId); };
+    // iOS Safari: no page zoom on top of ours
+    const noGesture = (e: Event) => e.preventDefault();
+    document.addEventListener("gesturestart", noGesture);
     window.addEventListener("pointerdown", down);
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", up);
@@ -273,6 +314,7 @@ function CameraRig({ gltf, lens, sensor }: { gltf: { scene: THREE.Object3D }; le
     document.documentElement.addEventListener("mouseleave", out);
     window.addEventListener("blur", out);
     return () => {
+      document.removeEventListener("gesturestart", noGesture);
       window.removeEventListener("pointerdown", down);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
@@ -358,6 +400,18 @@ function CameraRig({ gltf, lens, sensor }: { gltf: { scene: THREE.Object3D }; le
       s.vel = 0;
       if (Math.abs(d) < 0.002) { s.turn = rig.target; rig.target = null; }
     }
+    // touch zoom: a window inside the normal frame (view offset keeps raycasts and outlines right); back to 1 outside the room
+    const z = zs.current, cam = camera as THREE.PerspectiveCamera;
+    if (!free && z.z > 1) {
+      z.z += (1 - z.z) * (1 - Math.exp(-dt * 6));
+      if (z.z < 1.002) z.z = 1;
+      const lo = 0.5 / z.z;
+      z.cx = THREE.MathUtils.clamp(z.cx, lo, 1 - lo); z.cy = THREE.MathUtils.clamp(z.cy, lo, 1 - lo);
+    }
+    if (z.z > 1.001) {
+      const W = size.width, H = size.height;
+      cam.setViewOffset(W, H, (z.cx - 0.5 / z.z) * W, (z.cy - 0.5 / z.z) * H, W / z.z, H / z.z);
+    } else if (cam.view?.enabled) cam.clearViewOffset();
     camera.quaternion.copy(pose.a.q).slerp(pose.b.q, s.turn);
     const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
     const up = new THREE.Vector3(0, 1, 0);
