@@ -3,6 +3,7 @@ import { MENU, MenuAction } from "./content";
 import { store, useStore } from "./store";
 import { toggleMusic, switchClick } from "./music";
 import { enableGyro, hasGyro, rig } from "./Room";
+import { Kbd } from "./Keycap";
 
 // Menu of the site. "Show all" = outline of every clickable object (Interact.tsx), no labels (Pasha, 2026-10-15).
 const UI = import.meta.env.BASE_URL + "ui/";
@@ -18,6 +19,7 @@ const LINE: Record<string, string> = {
   lamp: "M9 3h6l3 7H6zM12 10v8M8 21h8",
   meditation: "M12 4c2 3 2 5 0 8-2-3-2-5 0-8zM4 14c4 0 6 2 8 6 2-4 4-6 8-6",
   gyro: "M8 3h8v18H8zM3 9c-1 2-1 4 0 6M21 9c1 2 1 4 0 6",
+  burger: "M4 7h16M4 12h16M4 17h11",
 };
 
 function Icon({ name }: { name: string }) {
@@ -34,6 +36,7 @@ export default function Menu() {
   const reveal = useStore((s) => s.reveal);
   const gyro = useStore((s) => s.gyro);
   const phone = hasGyro();
+  const [more, setMore] = useState(false);   // burger list open
   const active: Partial<Record<MenuAction, boolean>> = { music, lamp: !lamp, reveal, gyro };
 
   // "show all" switches itself off after a while and on any click into the room
@@ -59,18 +62,58 @@ export default function Menu() {
     }
   };
 
+  // hotkeys: the letter of each item (MENU.key, also the burger ones), Tab = burger. Only in the room
+  // (other screens have Esc; Esc also closes the burger). e.code = physical key, so it works on the Russian layout too.
+  const items = MENU.filter((m) => !m.phoneOnly || phone);
+  const actRef = useRef(act);
+  actRef.current = act;
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || store.get().mode.kind !== "room") return;
+      if (e.code === "Escape") { setMore(false); return; }
+      if (e.code === "Tab") { e.preventDefault(); setMore((v) => !v); return; }
+      const m = MENU.find((m) => "Key" + m.key === e.code && (!m.phoneOnly || hasGyro()));
+      if (m) { setMore(false); actRef.current(m.id); }
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, []);
+  // a click anywhere outside the menu closes the list
+  const nav = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!more) return;
+    const down = (e: PointerEvent) => { if (!nav.current?.contains(e.target as Node)) setMore(false); };
+    window.addEventListener("pointerdown", down);
+    return () => window.removeEventListener("pointerdown", down);
+  }, [more]);
+
   const hidden = mode.kind !== "room";
+  const pick = (id: MenuAction) => { setMore(false); act(id); };
   return (
-    <>
-      <nav className={"menu" + (hidden ? " hidden" : "")}>
-        {MENU.filter((m) => !m.phoneOnly || phone).map((m) => (
-          <button key={m.id} className={active[m.id] ? "on" : ""} onClick={() => act(m.id)} aria-label={m.label}>
+    <nav ref={nav} className={"menu" + (hidden ? " hidden" : "") + (more ? " open" : "")}>
+      <i className="plate-bg" />
+      {items.map((m) => m.main && (
+        <button key={m.id} className={"main" + (active[m.id] ? " on" : "")} onClick={() => pick(m.id)}>
+          <Icon name={m.icon} />
+          <em>{m.label}</em>
+          <Kbd k={m.key} />
+        </button>
+      ))}
+      <button className={"burger" + (more ? " on" : "")} onClick={() => setMore(!more)} aria-label="Ещё" aria-expanded={more}>
+        <Icon name="burger" />
+        <Kbd k="Tab" />
+      </button>
+      <div className="more plate" role="menu">
+        <i className="plate-bg" />
+        {items.map((m) => !m.main && (
+          <button key={m.id} role="menuitem" className={active[m.id] ? "on" : ""} onClick={() => pick(m.id)}>
             <Icon name={m.icon} />
-            <span>{m.label}</span>
+            <em>{m.label}</em>
+            <Kbd k={m.key} />
           </button>
         ))}
-      </nav>
-    </>
+      </div>
+    </nav>
   );
 }
 

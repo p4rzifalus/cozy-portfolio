@@ -7,31 +7,48 @@ import { toggleMusic } from "./music";
 import Menu, { GyroHint } from "./Menu";
 import "./overlay.css";
 import { V } from "./version";
+import { paintUI } from "./brush";
+import { Hint, Kbd } from "./Keycap";
+import { MENU } from "./content";
 
 // HTML on top of the 3D room: label at the cursor, project card, contacts note, meditation screen, music badge.
 export default function Overlay() {
   const mode = useStore((s) => s.mode);
   const music = useStore((s) => s.music);
 
+  const ui = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
+    paintUI();
     const key = (e: KeyboardEvent) => { if (e.key === "Escape") closeAll(); };
+    // plates lean a little after the cursor, like the camera parallax (--mx, --my = -1…1)
+    const move = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse" || !ui.current) return;
+      ui.current.style.setProperty("--mx", (e.clientX / innerWidth * 2 - 1).toFixed(3));
+      ui.current.style.setProperty("--my", (e.clientY / innerHeight * 2 - 1).toFixed(3));
+    };
     window.addEventListener("keydown", key);
-    return () => window.removeEventListener("keydown", key);
+    window.addEventListener("pointermove", move);
+    return () => { window.removeEventListener("keydown", key); window.removeEventListener("pointermove", move); };
   }, []);
 
+  const back = mode.kind === "contacts" || (mode.kind === "book");
+
   return (
-    <div className="ui">
+    <div className="ui" ref={ui}>
       <HoverLabel />
       <Menu />
       <GyroHint />
       {mode.kind === "project" && <ProjectCard id={mode.id} key={mode.id} />}
       {mode.kind === "contacts" && <Contacts />}
+      {back && <div className="hints-bar"><Hint k="Esc" onClick={closeAll} className="plate"><i className="plate-bg" />Назад</Hint></div>}
       <LaptopScreen />
       <BookOverlay />
       <Meditation on={mode.kind === "meditation"} />
       {music && mode.kind !== "meditation" && (
-        <button className="music-badge" onClick={toggleMusic} title="Выключить музыку">
-          <span className="eq"><i /><i /><i /></span>играет музыка
+        <button className="music-badge plate" onClick={toggleMusic} title="Выключить музыку">
+          <i className="plate-bg" />
+          <span className="eq"><i /><i /><i /></span><em>играет музыка</em><Kbd k={MENU.find((m) => m.id === "music")!.key} />
         </button>
       )}
     </div>
@@ -54,24 +71,39 @@ function HoverLabel() {
   const hint = h?.action === "music" && music ? "выключить музыку" : h?.action === "lamp" && !lamp ? "включить свет" : h?.hint;
   return (
     <div ref={ref} className={"hover-label" + (h ? " on" : "")}>
-      {h && <><b>{h.label}</b><span>{hint}</span></>}
+      <div className="plate">
+        <i className="plate-bg" />
+        {h && <><b>{h.label}</b><span className="hint"><Kbd k="mouse" /><em>{hint}</em></span></>}
+      </div>
     </div>
   );
 }
 
 function ProjectCard({ id }: { id: string }) {
   const p = PROJECTS[id];
+  const link = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => { if (e.key === "Enter") link.current?.click(); };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, []);
   if (!p) return null;
   return (
     <aside className="card project" onPointerDown={(e) => e.stopPropagation()}>
-      <button className="close" onClick={closeAll} aria-label="Закрыть">×</button>
-      <div className="meta">{p.kind} · {p.year}</div>
-      <h2>{p.title}</h2>
-      <div className="role">{p.role}</div>
-      {p.text.map((t, i) => <p key={i}>{t}</p>)}
-      <div className="tags">{p.tags.map((t) => <span key={t}>{t}</span>)}</div>
-      {p.link && <a className="btn" href={p.link.url} target="_blank" rel="noreferrer">{p.link.label} →</a>}
-      <div className="drag-hint">потяни, чтобы покрутить · Esc — назад</div>
+      <i className="plate-bg" />
+      <i className="blot" />
+      <div className="card-body">
+        <div className="meta">{p.kind} · {p.year}</div>
+        <h2>{p.title}</h2>
+        <div className="role">{p.role}</div>
+        {p.text.map((t, i) => <p key={i}>{t}</p>)}
+        <div className="tags">{p.tags.map((t) => <span key={t}>{t}</span>)}</div>
+        {p.link && <a ref={link} className="swash" href={p.link.url} target="_blank" rel="noreferrer"><Kbd k="↵" />{p.link.label}</a>}
+      </div>
+      <div className="card-hints">
+        <Hint k="Esc" onClick={closeAll}>Назад</Hint>
+        <Hint k="drag">Покрутить</Hint>
+      </div>
     </aside>
   );
 }
@@ -97,8 +129,8 @@ function Meditation({ on }: { on: boolean }) {
   // the scene itself is 3D (Meditation.tsx); here only a quiet way back, shown after the flight
   return (
     <div className={"meditation" + (on ? " on" : "")}>
-      <button className="back" onClick={closeAll}>← вернуться в комнату</button>
-      <div className="leave">звучит мантра · Esc — назад</div>
+      <Hint k="Esc" onClick={closeAll} className="plate back"><i className="plate-bg" />Вернуться в комнату</Hint>
+      <div className="leave">звучит мантра</div>
     </div>
   );
 }
@@ -146,7 +178,7 @@ function LaptopScreen() {
           </div>
         </div>
       </div>
-      {on && ready && <button className="back-pill" onClick={closeAll}>← к комнате · Esc</button>}
+      {on && ready && <div className="hints-bar"><Hint k="Esc" onClick={closeAll} className="plate"><i className="plate-bg" />К комнате</Hint></div>}
     </>
   );
 }

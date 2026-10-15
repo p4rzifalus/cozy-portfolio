@@ -228,3 +228,150 @@
 .gyro-hint span { flex: 1 1 100%; }
 .gyro-hint button { padding: 8px 14px; border-radius: 99px; border: 0; background: var(--amber); color: #2a160a; font: 700 13px var(--sans); }
 .gyro-hint button.ghost { background: transparent; color: var(--ink-dim); }
+
+/* ===== Painted UI (Disco Elysium / Dishonored): translucent brush plates, offset strokes, a slight 3D lean, keycaps.
+   Textures come from brush.ts (drawn in the browser) or site/public/ui/tex/*.png (generated, refs/UI_PROMPTS.md). */
+:root { --script: var(--sans);  /* labels: plain interface font (Pasha, 2026-10-15; was Bad Script) */ --dark: #24161c; }
+.plate, .card, .menu { isolation: isolate; }
+.plate { position: relative; }
+.plate-bg {
+  position: absolute; inset: -12px -26px; z-index: -1; pointer-events: none;
+  /* two strokes on top of each other: denser, still with gaps at the ends */
+  background: var(--stroke-0) center / 100% 100% no-repeat, var(--stroke-3) 40% 60% / 96% 90% no-repeat;
+  transform: translate(calc(var(--mx, 0) * -5px), calc(var(--my, 0) * -3px)); transition: transform 0.6s ease-out;
+}
+/* second stroke, shifted and turned: the plate looks laid by hand, in two passes (own pseudo-element, outside the mask) */
+.plate::after, .menu::after, .card::after {
+  content: ""; position: absolute; inset: 30% -10% -4px 12%; z-index: -2; pointer-events: none;
+  background: var(--stroke-1) center / 100% 100% no-repeat; opacity: 0.55;
+  transform: translate(calc(var(--mx, 0) * -9px), calc(var(--my, 0) * -5px)) rotate(-1.6deg); transition: transform 0.6s ease-out;
+}
+/* hairlines running past the plate */
+.plate::before, .menu::before, .card::before {
+  content: ""; position: absolute; inset: -4px -18% -6px -10%; z-index: -1; pointer-events: none;
+  border-top: 1px solid rgba(240, 226, 200, 0.3); border-bottom: 1px solid rgba(240, 226, 200, 0.16);
+  transform: rotate(-1.2deg) skewX(-10deg);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 15%, #000 70%, transparent);
+          mask: linear-gradient(90deg, transparent, #000 15%, #000 70%, transparent);
+}
+
+/* keycap */
+.kbd {
+  display: inline-grid; place-items: center; flex: none; min-width: 21px; height: 21px; padding: 0 4px; box-sizing: border-box;
+  font: 700 10.5px/1 var(--sans); color: #ece4d6; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+  background: linear-gradient(160deg, #6a6370, #2c2731 55%, #403a46); border: 1.5px solid #bcb3a5;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -2px 0 rgba(0, 0, 0, 0.45);
+}
+.kbd.wide { padding: 0 6px; }
+.kbd.mouse { height: 24px; min-width: 21px; padding: 0; }
+.kbd.mouse svg { width: 11px; height: 15px; }
+.hint { display: inline-flex; align-items: center; gap: 9px; padding: 0; border: 0; background: none; color: var(--ink);
+  font: 600 14px/1.2 var(--script); letter-spacing: 0.01em; cursor: pointer; }
+.hint em { font-style: normal; transition: color 0.2s, text-shadow 0.2s; }
+button.hint:hover em { color: #fff; text-shadow: 0 0 12px rgba(255, 200, 140, 0.55); }
+@media (hover: none) { .kbd { display: none !important; } }
+
+/* label at the cursor */
+.hover-label { padding: 0; background: none; border: 0; backdrop-filter: none; border-radius: 0; }
+.hover-label .plate { display: flex; flex-direction: column; gap: 3px; padding: 9px 18px 11px; transform: rotate(-1.5deg); }
+.hover-label .plate-bg { background-image: var(--stroke-hover), var(--stroke-hover); }
+.hover-label .plate::after { background-image: var(--stroke-1); opacity: 0.45; }
+.hover-label b, .hover-label .hint { text-shadow: 0 1px 2px rgba(20, 12, 28, 0.55); }
+.hover-label .hint { color: #e6d8c6; }
+.hover-label b { font-size: 18px; }
+.hover-label .hint { font-size: 13px; color: var(--ink-dim); gap: 7px; }
+
+/* project card: a big painted panel, turned towards the middle of the screen */
+.card {
+  background: none; border: 0; border-radius: 0; backdrop-filter: none; box-shadow: none; overflow: visible; padding: 34px 36px 26px;
+  transform: translateY(-50%) perspective(1100px) rotateY(calc(-8deg + var(--mx, 0) * 3deg)) rotateX(calc(var(--my, 0) * -2deg));
+  transition: transform 0.6s ease-out; animation-name: card-paint-in;
+}
+@keyframes card-paint-in { from { opacity: 0; transform: translateY(-50%) translateX(50px) perspective(1100px) rotateY(-28deg); } }
+.card .plate-bg { inset: -26px -40px -20px -46px; background-image: var(--panel), var(--panel); background-position: center, 52% 48%; background-size: 100% 100%, 97% 98%; }
+.card::after { inset: -40px 10% 80% -20px; }
+.card::before { inset: 20px -60px auto -30px; height: 70%; }
+.card .blot { position: absolute; left: -70px; top: -60px; width: 270px; height: 270px; z-index: -1; pointer-events: none;
+  background: var(--blot) center / contain no-repeat; transform: translate(calc(var(--mx, 0) * 9px), calc(var(--my, 0) * 6px)); transition: transform 0.6s ease-out; }
+.card-body { max-height: calc(82vh - 70px); overflow: auto; scrollbar-width: thin; scrollbar-color: rgba(240, 226, 200, 0.25) transparent; }
+.card h2 { font-size: 38px; }
+.card .meta { color: var(--amber); }
+.card .role { font: 14px var(--script); color: var(--ink-dim); }
+.tags span { border-radius: 0; border: 0; border-bottom: 1px solid rgba(240, 226, 200, 0.3); padding: 2px 4px; }
+.card-hints { display: flex; gap: 26px; margin-top: 18px; padding-top: 12px; border-top: 1px solid rgba(240, 226, 200, 0.14); }
+/* light swash with dark letters, like the selected item in the Dishonored menu */
+.swash {
+  display: inline-flex; align-items: center; gap: 10px; padding: 12px 40px 14px 28px; margin-left: -10px;
+  background: var(--stroke-light) center / 100% 100% no-repeat; color: var(--dark); font: 700 15px/1 var(--script);
+  text-decoration: none; transition: transform 0.2s;
+}
+.swash:hover { transform: translateX(5px) rotate(-0.5deg); }
+@media (max-aspect-ratio: 9/10) {
+  .card { transform: none; animation-name: sheet-in; padding: 24px 24px 18px; }
+  .card .plate-bg { inset: -10px -14px; }
+  .card .blot { left: -30px; top: -40px; width: 180px; height: 180px; }
+  .card-body { max-height: calc(48vh - 60px); }
+}
+
+/* menu: one painted stroke with icons, keycap numbers in the corners */
+.menu {
+  background: none; border: 0; border-radius: 0; backdrop-filter: none; gap: 6px; padding: 8px 18px;
+  transform: translateX(-50%) perspective(800px) rotateX(calc(12deg + var(--my, 0) * -3deg)) rotateY(calc(var(--mx, 0) * 5deg));
+}
+.menu.hidden { transform: translateX(-50%) translateY(-16px) perspective(800px) rotateX(30deg); }
+.menu .plate-bg { inset: -16px -36px -18px; background-image: var(--stroke-2), var(--stroke-0); }
+.menu button { width: 44px; height: 44px; border-radius: 0; }
+.menu button:hover { background: var(--stroke-light) center / 100% 100% no-repeat; color: var(--dark); }
+.menu button.on { background: none; color: var(--amber); filter: drop-shadow(0 0 6px rgba(255, 179, 92, 0.6)); }
+.menu button .kbd { position: absolute; right: -5px; bottom: -3px; transform: scale(0.72); transform-origin: 100% 100%; opacity: 0.85; }
+.menu button .tip {
+  top: calc(100% + 12px); padding: 5px 20px 7px; border-radius: 0; background: var(--stroke-3) center / 100% 100% no-repeat;
+  font: 600 13px var(--script); color: var(--ink);
+}
+@media (hover: none), (max-aspect-ratio: 9/10) {
+  .menu { transform: translateX(-50%); padding: 6px 12px; }
+  .menu.hidden { transform: translateX(-50%) translateY(16px); }
+  .menu .plate-bg { inset: 0; }
+}
+
+/* small plates: back, music */
+.hints-bar { position: fixed; left: 0; right: 0; bottom: 4vh; display: flex; justify-content: center; animation: fade 0.4s both; }
+.hint.plate { padding: 8px 24px 10px; font-size: 15px; pointer-events: auto;
+  transform: perspective(600px) rotateX(calc(8deg + var(--my, 0) * -3deg)) rotateY(calc(var(--mx, 0) * 5deg)); transition: transform 0.6s ease-out; }
+.meditation .back { padding: 8px 24px 10px; border: 0; background: none; backdrop-filter: none; font: 600 15px var(--script); }
+.meditation .back:hover { background: none; }
+.music-badge { background: none; border: 0; border-radius: 0; backdrop-filter: none; padding: 8px 20px; left: 34px; bottom: 26px; gap: 10px; }
+.music-badge em { font: normal 600 13px var(--script); }
+.music-badge .plate-bg { background-image: var(--stroke-3), var(--stroke-1); }
+
+/* menu: 3 main buttons with labels + burger with the rest (Pasha, 2026-10-15) */
+.menu { overflow: visible; gap: 4px; }
+.menu em { font-style: normal; }
+.menu button.main { width: auto; height: 40px; padding: 0 12px 0 10px; display: flex; align-items: center; gap: 8px;
+  font: 600 14px/1 var(--script); white-space: nowrap; }
+.menu button.main .kbd, .more button .kbd { position: static; transform: scale(0.85); opacity: 0.85; }
+.menu button.burger { margin-left: 6px; }
+.menu button.burger::before { content: ""; position: absolute; left: -6px; top: 8px; bottom: 8px; border-left: 1px solid rgba(240, 226, 200, 0.22); }
+.menu button.burger.on { color: var(--dark); background: var(--stroke-light) center / 100% 100% no-repeat; filter: none; }
+
+.more {
+  position: absolute; top: calc(100% + 22px); right: -14px; min-width: 240px; padding: 16px 18px 18px; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 2px;
+  opacity: 0; visibility: hidden; transform: translateY(-10px) rotate(-1.2deg); transform-origin: 90% 0;
+  transition: opacity 0.25s, transform 0.35s cubic-bezier(.2,.8,.2,1), visibility 0s 0.35s;
+}
+.menu.open .more { opacity: 1; visibility: visible; transform: rotate(-1.2deg); transition: opacity 0.25s, transform 0.35s cubic-bezier(.2,.8,.2,1); }
+.more .plate-bg { inset: -10px -22px; background-image: var(--panel); }
+.more::after { inset: 55% -14% -10px 20%; }
+.menu .more button { width: auto; height: auto; display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 12px;
+  padding: 7px 12px 8px 10px; text-align: left; justify-items: start; place-items: center start; font: 600 15px/1.2 var(--script); }
+.menu .more button .kbd { justify-self: end; }
+.menu .more button svg, .menu .more button img { width: 20px; height: 20px; }
+
+@media (hover: none), (max-aspect-ratio: 9/10) {
+  .menu { overflow: visible; max-width: none; }
+  .menu button.main { font-size: 13px; padding: 0 9px; gap: 6px; height: 44px; }
+  .more { top: auto; bottom: calc(100% + 20px); transform-origin: 90% 100%; transform: translateY(10px) rotate(-1.2deg); }
+}
+@media (max-width: 420px) { .menu button.main svg, .menu button.main img { display: none; } }

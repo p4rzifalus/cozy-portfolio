@@ -68,17 +68,19 @@ export const CONTACTS: { label: string; value: string; url: string }[] = [
   { label: "Behance", value: "behance.net/username", url: "https://behance.net/username" },
 ];
 
-// Menu buttons (top of the screen; on phones at the bottom). Order = order on screen. `icon` = picture in
-// site/public/ui/<icon>.png if it exists (generated icons), otherwise the built-in line icon of the same name.
+// Menu (top of the screen; on phones at the bottom). Order = order on screen. key = hotkey, first letter of the English
+// word (physical key, works on any keyboard layout); the burger itself opens with Tab.
+// main = always visible next to the burger, the rest sits in the burger list (Pasha, 2026-10-15).
+// `icon` = picture in site/public/ui/<icon>.png if it exists (generated icons), otherwise the built-in line icon of the same name.
 export type MenuAction = "reveal" | "shelf" | "laptop" | "book" | "contacts" | "music" | "lamp" | "meditation" | "gyro";
-export const MENU: { id: MenuAction; label: string; icon: string; phoneOnly?: boolean }[] = [
-  { id: "reveal", label: "Что можно нажать", icon: "reveal" },
-  { id: "shelf", label: "Проекты", icon: "shelf" },
-  { id: "laptop", label: "Резюме", icon: "laptop" },
-  { id: "book", label: "Канал", icon: "book" },
-  { id: "contacts", label: "Контакты", icon: "contacts" },
-  { id: "music", label: "Музыка", icon: "music" },
-  { id: "lamp", label: "Свет", icon: "lamp" },
-  { id: "meditation", label: "Медитация", icon: "meditation" },
-  { id: "gyro", label: "Гироскоп", icon: "gyro", phoneOnly: true },
+export const MENU: { id: MenuAction; label: string; icon: string; key: string; main?: boolean; phoneOnly?: boolean }[] = [
+  { id: "shelf", label: "Проекты", icon: "shelf", key: "P", main: true },
+  { id: "laptop", label: "Резюме", icon: "laptop", key: "R", main: true },
+  { id: "contacts", label: "Контакты", icon: "contacts", key: "C", main: true },
+  { id: "reveal", label: "Что можно нажать", icon: "reveal", key: "H" },
+  { id: "book", label: "Канал", icon: "book", key: "T" },
+  { id: "music", label: "Музыка", icon: "music", key: "M" },
+  { id: "lamp", label: "Свет", icon: "lamp", key: "L" },
+  { id: "meditation", label: "Медитация", icon: "meditation", key: "Z" },
+  { id: "gyro", label: "Гироскоп", icon: "gyro", key: "G", phoneOnly: true },
 ];
