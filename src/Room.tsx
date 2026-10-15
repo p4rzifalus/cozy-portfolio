@@ -201,22 +201,79 @@ function lampOn(t: number) {
 // Field of view by window width (CSS px): Blender lens up to `from`, `wideFov` (deg, horizontal) from `to` on.
 export const VIEW = { from: 1100, to: 1800, wideFov: 58 };
 export const TURN = { zone: 0.3, speed: 0.4, accel: 4.0, soft: 0.1 };
+// Phone: GYRO.gain = camera turn per phone turn (1 = turn the phone by the same angle as the head, like a window into the room),
+// pitch = phone tilt (rad) for the full up/down parallax. Touch drag: `drag` = turn per screen width.
+export const GYRO = { gain: 1.3, pitch: 0.35, smooth: 8 };
+export const TOUCH = { drag: 1.6 };
+// menu buttons: turn the head to a given position (0 = desk, 1 = shelf); the rig eases there and lets go
+export const rig = { target: null as number | null };
+
+// phone orientation -> heading (rad, counter-clockwise from above) and pitch of the screen's view direction.
+// Same maths as three's old DeviceOrientationControls: alpha/beta/gamma + screen rotation -> quaternion.
+const _e = new THREE.Euler(), _q = new THREE.Quaternion(), _f = new THREE.Vector3();
+const Q_X = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));   // -90 deg around X: look out of the back of the phone
+function phoneLook(a: number, b: number, g: number, screen: number) {
+  const d = THREE.MathUtils.DEG2RAD;
+  _e.set(b * d, a * d, -g * d, "YXZ");
+  _q.setFromEuler(_e).multiply(Q_X).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -screen * d));
+  _f.set(0, 0, -1).applyQuaternion(_q);
+  return { heading: Math.atan2(-_f.x, -_f.z), pitch: Math.asin(THREE.MathUtils.clamp(_f.y, -1, 1)) };
+}
+const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
+
+// iOS asks for permission (only from a tap); Android just sends the events. Returns false if refused / not available.
+export async function enableGyro(): Promise<boolean> {
+  const DOE = (window as unknown as { DeviceOrientationEvent?: { requestPermission?: () => Promise<string> } }).DeviceOrientationEvent;
+  if (!DOE) return false;
+  if (typeof DOE.requestPermission === "function") {
+    try { if ((await DOE.requestPermission()) !== "granted") return false; } catch { return false; }
+  }
+  store.set({ gyro: true });
+  return true;
+}
+export const hasGyro = () => typeof window !== "undefined" && "DeviceOrientationEvent" in window && matchMedia("(pointer: coarse)").matches;
 function CameraRig({ gltf, lens, sensor }: { gltf: { scene: THREE.Object3D }; lens: number; sensor: number }) {
   const { camera, size } = useThree();
   // cursor over the whole window (also over future UI cards), -1..1
-  const mouse = useRef({ x: 0, y: 0, inside: false });
+  const mouse = useRef({ x: 0, y: 0, inside: false, drag: 0, dragX: null as number | null });
+  // phone orientation (raw, smoothed in useFrame); ref = heading that corresponds to the current turn
+  const phone = useRef({ heading: 0, pitch: 0, ok: false, ref: null as number | null, pitch0: 0 });
   useEffect(() => {
     const on = (e: PointerEvent) => {
+      if (e.pointerType === "touch") {
+        // finger: drag sideways turns the head (no edges, no parallax)
+        const m = mouse.current;
+        if (m.dragX !== null) m.drag += ((m.dragX - e.clientX) / window.innerWidth) * TOUCH.drag;
+        m.dragX = e.clientX;
+        return;
+      }
       mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouse.current.y = -((e.clientY / window.innerHeight) * 2 - 1);
       mouse.current.inside = true;
     };
+    const down = (e: PointerEvent) => { if (e.pointerType === "touch") mouse.current.dragX = e.clientX; };
+    const up = () => { mouse.current.dragX = null; };
+    window.addEventListener("pointerdown", down);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+    const orient = (e: DeviceOrientationEvent) => {
+      if (e.alpha === null || e.beta === null || e.gamma === null) return;
+      const screen = (screen_angle());
+      const l = phoneLook(e.alpha, e.beta, e.gamma, screen);
+      const p = phone.current;
+      p.heading = l.heading; p.pitch = l.pitch; p.ok = true;
+    };
+    window.addEventListener("deviceorientation", orient);
     // the cursor left the window: stop turning (otherwise the last edge position keeps turning the head)
     const out = () => { mouse.current.inside = false; };
     window.addEventListener("pointermove", on);
     document.documentElement.addEventListener("mouseleave", out);
     window.addEventListener("blur", out);
     return () => {
+      window.removeEventListener("pointerdown", down);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+      window.removeEventListener("deviceorientation", orient);
       window.removeEventListener("pointermove", on);
       document.documentElement.removeEventListener("mouseleave", out);
       window.removeEventListener("blur", out);
@@ -229,7 +286,8 @@ function CameraRig({ gltf, lens, sensor }: { gltf: { scene: THREE.Object3D }; le
       const cam = o.children.find((c) => (c as THREE.Camera).isCamera) ?? o;
       return { p: cam.getWorldPosition(new THREE.Vector3()), q: cam.getWorldQuaternion(new THREE.Quaternion()) };
     };
-    return { a: get("Camera_01_Main"), b: get("Camera_02_Shelf") };
+    const a = get("Camera_01_Main"), b = get("Camera_02_Shelf");
+    return { a, b, angle: a.q.angleTo(b.q) };
   }, [gltf]);
   const st = useRef({ turn: 0, vel: 0, px: 0, py: 0 });
 
@@ -263,7 +321,7 @@ function CameraRig({ gltf, lens, sensor }: { gltf: { scene: THREE.Object3D }; le
       const depth = THREE.MathUtils.clamp((Math.abs(pointer.x) - (1 - TURN.zone)) / TURN.zone, 0, 1);
       want = Math.sign(pointer.x) * TURN.speed * depth * depth * (3 - 2 * depth);
     }
-    if (free) {
+    if (free && !(store.get().gyro && phone.current.ok)) {
       s.px += (pointer.x - s.px) * (1 - Math.exp(-dt * 3));
       s.py += (pointer.y - s.py) * (1 - Math.exp(-dt * 3));
     }
@@ -272,6 +330,31 @@ function CameraRig({ gltf, lens, sensor }: { gltf: { scene: THREE.Object3D }; le
     const room = s.vel > 0 ? 1 - s.turn : s.turn;
     const v = s.vel * THREE.MathUtils.clamp(room / TURN.soft, 0, 1);
     s.turn = THREE.MathUtils.clamp(s.turn + v * dt, 0, 1);
+    // finger drag
+    if (pointer.drag) {
+      if (free) { s.turn = THREE.MathUtils.clamp(s.turn + pointer.drag, 0, 1); rig.target = null; }
+      pointer.drag = 0;
+    }
+    // phone orientation: turning the phone to the right turns the head to the shelf. The reference slides when the
+    // phone goes past the limits, so after turning "too far" the way back starts at once.
+    const ph = phone.current, gyro = store.get().gyro && ph.ok;
+    if (gyro && free && rig.target === null) {
+      if (ph.ref === null) { ph.ref = ph.heading + (s.turn * pose.angle) / GYRO.gain; ph.pitch0 = ph.pitch; }
+      let want = (wrap(ph.ref - ph.heading) * GYRO.gain) / pose.angle;
+      if (want < 0) { ph.ref -= (want * pose.angle) / GYRO.gain; want = 0; }
+      if (want > 1) { ph.ref -= ((want - 1) * pose.angle) / GYRO.gain; want = 1; }
+      s.turn += (want - s.turn) * (1 - Math.exp(-dt * GYRO.smooth));
+      // tilt: parallax up/down; the "level" slowly follows the way the phone is held
+      ph.pitch0 += (ph.pitch - ph.pitch0) * (1 - Math.exp(-dt * 0.15));
+      s.py += (THREE.MathUtils.clamp((ph.pitch - ph.pitch0) / GYRO.pitch, -1, 1) - s.py) * (1 - Math.exp(-dt * GYRO.smooth));
+    } else ph.ref = null;
+    // menu: ease to a given turn
+    if (rig.target !== null) {
+      const d = rig.target - s.turn;
+      s.turn += d * (1 - Math.exp(-dt * 2.2));
+      s.vel = 0;
+      if (Math.abs(d) < 0.002) { s.turn = rig.target; rig.target = null; }
+    }
     camera.quaternion.copy(pose.a.q).slerp(pose.b.q, s.turn);
     const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
     const up = new THREE.Vector3(0, 1, 0);
@@ -279,3 +362,5 @@ function CameraRig({ gltf, lens, sensor }: { gltf: { scene: THREE.Object3D }; le
   });
   return null;
 }
+
+const screen_angle = () => (screen.orientation?.angle ?? (window as unknown as { orientation?: number }).orientation ?? 0) as number;

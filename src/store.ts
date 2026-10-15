@@ -17,9 +17,11 @@ export interface State {
   lamp: boolean;           // desk lamp on
   bookOpen: boolean;       // the HTML book has replaced the 3D one in front of the camera (Book.tsx <-> Overlay.tsx)
   laptopReady: boolean;    // the camera arrived at the laptop: show the screen UI
+  reveal: boolean;         // menu: outline and label every clickable object at once
+  gyro: boolean;           // phone: the head follows the phone orientation
 }
 
-let state: State = { hovered: null, mode: { kind: "room" }, music: false, lamp: true, bookOpen: false, laptopReady: false };
+let state: State = { hovered: null, mode: { kind: "room" }, music: false, lamp: true, bookOpen: false, laptopReady: false, reveal: false, gyro: false };
 const subs = new Set<() => void>();
 
 export const store = {

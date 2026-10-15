@@ -67,3 +67,18 @@ export const CONTACTS: { label: string; value: string; url: string }[] = [
   { label: "Почта", value: "mail@example.com", url: "mailto:mail@example.com" },
   { label: "Behance", value: "behance.net/username", url: "https://behance.net/username" },
 ];
+
+// Menu buttons (top of the screen; on phones at the bottom). Order = order on screen. `icon` = picture in
+// site/public/ui/<icon>.png if it exists (generated icons), otherwise the built-in line icon of the same name.
+export type MenuAction = "reveal" | "shelf" | "laptop" | "book" | "contacts" | "music" | "lamp" | "meditation" | "gyro";
+export const MENU: { id: MenuAction; label: string; icon: string; phoneOnly?: boolean }[] = [
+  { id: "reveal", label: "Что можно нажать", icon: "reveal" },
+  { id: "shelf", label: "Проекты", icon: "shelf" },
+  { id: "laptop", label: "Резюме", icon: "laptop" },
+  { id: "book", label: "Канал", icon: "book" },
+  { id: "contacts", label: "Контакты", icon: "contacts" },
+  { id: "music", label: "Музыка", icon: "music" },
+  { id: "lamp", label: "Свет", icon: "lamp" },
+  { id: "meditation", label: "Медитация", icon: "meditation" },
+  { id: "gyro", label: "Гироскоп", icon: "gyro", phoneOnly: true },
+];

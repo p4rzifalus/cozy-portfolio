@@ -27,6 +27,8 @@ export const view = {
 
 if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__view = view;
 const OUTLINE = { color: new THREE.Color("#ffe3b3"), radius: 4.0, fill: 0.1 };
+// "show all" (menu): labels over every hotspot, moved here every frame (Overlay.tsx registers the elements)
+export const revealLabels = { els: {} as Record<string, HTMLElement | null> };
 
 const quadVert = /* glsl */ `
   varying vec2 vUv;
@@ -123,6 +125,7 @@ export default function Interact({ scene }: { scene: THREE.Object3D }) {
       if (!d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6 || performance.now() - d.t > 600) return;   // a drag, not a click
       const s = store.get();
       if (s.mode.kind !== "room") return;
+      if (s.reveal) store.set({ reveal: false });
       // touch screens have no hover: pick right at the tap
       move(e);
       const id = pick();
@@ -155,6 +158,29 @@ export default function Interact({ scene }: { scene: THREE.Object3D }) {
     return hit ? hotspotOf(hit.object) : null;
   }
 
+  // labels of "show all": above the top of each hotspot, hidden when off screen or behind the camera
+  const tmp = useMemo(() => ({ box: new THREE.Box3(), v: new THREE.Vector3() }), []);
+  function placeRevealLabels(amount: number) {
+    for (const [id, meshes] of Object.entries(partsOf)) {
+      const el = revealLabels.els[id];
+      if (!el) continue;
+      if (amount < 0.01 || !meshes.length) { el.style.opacity = "0"; continue; }
+      tmp.box.makeEmpty();
+      for (const m of meshes) tmp.box.expandByObject(m);
+      // visible = the centre is on screen; the label goes above the top, kept inside the screen (below the menu)
+      tmp.box.getCenter(tmp.v);
+      tmp.v.project(camera);
+      const on = tmp.v.z < 1 && Math.abs(tmp.v.x) < 0.97 && Math.abs(tmp.v.y) < 0.97;
+      tmp.box.getCenter(tmp.v);
+      tmp.v.y = tmp.box.max.y;
+      tmp.v.project(camera);
+      el.style.opacity = on ? String(amount) : "0";
+      const x = THREE.MathUtils.clamp((tmp.v.x * 0.5 + 0.5) * size.width, 70, size.width - 70);
+      const y = THREE.MathUtils.clamp((-tmp.v.y * 0.5 + 0.5) * size.height, 100, size.height - 20);
+      el.style.transform = `translate(${x}px, ${y}px)`;
+    }
+  }
+
   // render targets and full-screen passes
   const passes = useMemo(() => {
     const mask = new THREE.WebGLRenderTarget(1, 1, { depthBuffer: true });
@@ -165,8 +191,10 @@ export default function Interact({ scene }: { scene: THREE.Object3D }) {
     const veil = quad(veilFrag, { amount: { value: 0 } });
     const fog = quad(fogFrag, { amount: { value: 0 }, time: { value: 0 } });
     const white = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const depth = new THREE.MeshBasicMaterial({ colorWrite: false });   // the room only fills the depth: hides what is behind
+    depth.side = THREE.DoubleSide;
     const ortho = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    return { mask, outline, veil, fog, white, ortho, shown: null as string | null, amount: 0 };
+    return { mask, outline, veil, fog, white, depth, ortho, shown: null as string | null, amount: 0, reveal: 0 };
   }, []);
   useEffect(() => {
     const dpr = gl.getPixelRatio();
@@ -189,6 +217,7 @@ export default function Interact({ scene }: { scene: THREE.Object3D }) {
     // outline fades in and out; while fading out it keeps the last hotspot
     if (hovered) passes.shown = hovered;
     passes.amount += ((hovered ? 1 : 0) - passes.amount) * (1 - Math.exp(-dt * 12));
+    passes.reveal += ((s.reveal && s.mode.kind === "room" ? 1 : 0) - passes.reveal) * (1 - Math.exp(-dt * 8));
 
     // --- room
     gl.toneMappingExposure = view.exposure;
@@ -210,8 +239,9 @@ export default function Interact({ scene }: { scene: THREE.Object3D }) {
     }
 
     // --- outline
-    if (passes.shown && passes.amount > 0.01) {
-      const meshes = partsOf[passes.shown];
+    const revealing = passes.reveal > 0.01;
+    if ((passes.shown && passes.amount > 0.01) || revealing) {
+      const meshes = revealing ? Object.values(partsOf).flat() : partsOf[passes.shown!];
       for (const m of meshes) m.layers.enable(MASK_LAYER);
       camera.layers.set(MASK_LAYER);
       const bg = root.background, ov = root.overrideMaterial;
@@ -221,15 +251,27 @@ export default function Interact({ scene }: { scene: THREE.Object3D }) {
       gl.setRenderTarget(passes.mask);
       gl.setClearColor(0x000000, 0);
       gl.clear();
+      // "show all": depth of the whole room first, so a plant in front of the laptop cuts its outline
+      if (revealing) {
+        camera.layers.set(0);
+        root.overrideMaterial = passes.depth;
+        gl.render(root, camera);
+        root.overrideMaterial = passes.white;
+        camera.layers.set(MASK_LAYER);
+        gl.autoClearDepth = false;
+      }
       gl.render(root, camera);
       gl.setRenderTarget(null);
       gl.setClearColor(clear, clearA);
+      gl.autoClearDepth = true;
       root.background = bg;
       root.overrideMaterial = ov;
       for (const m of meshes) m.layers.disable(MASK_LAYER);
-      (passes.outline.material as THREE.ShaderMaterial).uniforms.amount.value = passes.amount;
+      (passes.outline.material as THREE.ShaderMaterial).uniforms.amount.value = Math.max(passes.amount, passes.reveal);
       gl.render(passes.outline, passes.ortho);
     } else if (!hovered) passes.shown = null;
+
+    placeRevealLabels(passes.reveal);
 
     // --- smoke curtain of the flight room <-> altar
     if (view.fog > 0.001) {

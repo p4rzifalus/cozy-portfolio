@@ -4,6 +4,7 @@ import { laptopScreen } from "./Laptop";
 import { bookAssets, bookScreenSize } from "./Book";
 import { closeAll, store, useStore } from "./store";
 import { toggleMusic } from "./music";
+import Menu, { GyroHint } from "./Menu";
 import "./overlay.css";
 
 // HTML on top of the 3D room: label at the cursor, project card, contacts note, meditation screen, music badge.
@@ -20,6 +21,8 @@ export default function Overlay() {
   return (
     <div className="ui">
       <HoverLabel />
+      <Menu />
+      <GyroHint />
       {mode.kind === "project" && <ProjectCard id={mode.id} key={mode.id} />}
       {mode.kind === "contacts" && <Contacts />}
       <LaptopScreen />
