@@ -30,6 +30,9 @@ export default function Inspect({ scene }: { scene: THREE.Object3D }) {
       if (h.action !== "project") continue;
       const obj = scene.getObjectByName(id);
       if (!obj) continue;
+      // self-lit parts are exported as a separate object (the lantern glass): fly together with the body
+      const emit = scene.getObjectByName(id + "__emit");
+      if (emit && emit.parent !== obj) obj.attach(emit);
       const meshes: THREE.Mesh[] = [];
       obj.traverse((o) => { if ((o as THREE.Mesh).isMesh) meshes.push(o as THREE.Mesh); });
       // local bounding box: world box of the object with its own transform removed

@@ -3,7 +3,7 @@
 // Clickable objects of the room. Key = object name in room.glb; parts = objects that light up together on hover.
 export type Action = "project" | "contacts" | "music" | "meditation" | "lamp" | "laptop" | "book";
 export const HOTSPOTS: Record<string, { label: string; hint: string; parts: string[]; action: Action }> = {
-  Project_01: { label: "Jack's Lantern", hint: "открыть проект", parts: ["Project_01"], action: "project" },
+  Project_01: { label: "Jack's Lantern", hint: "открыть проект", parts: ["Project_01", "Project_01__emit"], action: "project" },
   Project_02: { label: "cyber-sigil", hint: "открыть проект", parts: ["Project_02"], action: "project" },
   Contact_Note: { label: "Контакты", hint: "написать мне", parts: ["Contact_Note", "Contact_Phone_Sticker"], action: "contacts" },
   Record_Player: { label: "Проигрыватель", hint: "включить музыку", parts: ["Record_Player"], action: "music" },

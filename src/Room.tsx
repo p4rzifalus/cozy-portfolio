@@ -118,7 +118,9 @@ export default function Room() {
         strokes: PICTURES.test(name) ? 0 : 1,
         wall: (WALLS as readonly string[]).includes(name) ? wallOpts(name as (typeof WALLS)[number]) : undefined,
       });
-      obj.traverse((o) => { if ((o as THREE.Mesh).isMesh) (o as THREE.Mesh).material = mat; });
+      // self-lit parts (<name>__emit) may hang under the object (Inspect attaches them): they keep their own materials
+      const ownPart = (o: THREE.Object3D) => { for (let p: THREE.Object3D | null = o; p && p !== obj; p = p.parent) if (p.name.endsWith("__emit")) return false; return true; };
+      obj.traverse((o) => { if ((o as THREE.Mesh).isMesh && ownPart(o)) (o as THREE.Mesh).material = mat; });
       shaders.push(mat);
       // dev: window.__wallOn(false) shows the old baked wall albedo (before/after)
       if (import.meta.env.DEV && mat.uniforms.wall.value) {

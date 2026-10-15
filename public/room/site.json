@@ -54,6 +54,7 @@
    "albedo": "Contact_Phone_Sticker_albedo.webp",
    "light": "Contact_Phone_Sticker_light.webp",
    "masks": {
+    "neon": "Contact_Phone_Sticker_mask_neon.webp",
     "lamp": "Contact_Phone_Sticker_mask_lamp.webp"
    },
    "foliage": false
@@ -221,6 +222,19 @@
    "masks": {
     "neon": "Poster_01_mask_neon.webp",
     "lamp": "Poster_01_mask_lamp.webp"
+   },
+   "foliage": false
+  },
+  "Project_01__emit": {
+   "kind": "emissive"
+  },
+  "Project_01": {
+   "kind": "baked",
+   "albedo": "Project_01_albedo.webp",
+   "light": "Project_01_light.webp",
+   "masks": {
+    "neon": "Project_01_mask_neon.webp",
+    "lamp": "Project_01_mask_lamp.webp"
    },
    "foliage": false
   },
@@ -430,9 +444,6 @@
   },
   "Neon_Sign": {
    "kind": "emissive"
-  },
-  "Project_01": {
-   "kind": "plain"
   },
   "Project_02": {
    "kind": "plain"
