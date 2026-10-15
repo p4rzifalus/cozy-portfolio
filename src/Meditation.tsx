@@ -8,6 +8,7 @@ import Smoke, { findTips } from "./Smoke";
 import { view } from "./Interact";
 import { store } from "./store";
 import { startMantra, stopMantra } from "./music";
+import { V } from "./version";
 
 // Meditation: click on the incense -> the camera flies into its smoke, the smoke fills the screen, behind it the scene changes
 // to the altar (through a fade to black) (Buddha in the middle, incense burner, candle - from web-3d, baked like the room: blender/scripts/altar_build.py +
@@ -50,11 +51,11 @@ function intoSmoke(tip: THREE.Vector3, from: THREE.Vector3, fov: number): Pose {
 
 export default function Meditation({ room }: { room: THREE.Object3D }) {
   const { camera, size } = useThree();
-  const json: AltarJson = JSON.parse(useLoader(THREE.FileLoader, BASE + "altar.json") as string);
-  const gltf = useGLTF(BASE + "altar.glb");
+  const json: AltarJson = JSON.parse(useLoader(THREE.FileLoader, BASE + "altar.json" + V) as string);
+  const gltf = useGLTF(BASE + "altar.glb" + V);
   const baked = Object.entries(json.objects).filter(([, v]) => v.kind === "baked") as [string, { albedo: string; light: string; masks: Partial<Record<Source, string>> }][];
   const files = useMemo(() => baked.flatMap(([, b]) => [b.albedo, b.light, ...SOURCES.filter((s) => b.masks[s]).map((s) => b.masks[s]!)]), [baked.length]);
-  const bitmaps = useLoader(RawLoader, files.map((f) => BASE + f)) as ImageBitmap[];
+  const bitmaps = useLoader(RawLoader, files.map((f) => BASE + f + V)) as ImageBitmap[];
 
   // materials like the room: Painterly from albedo + lightmap; the candle mask uses the "lantern" flicker slot
   const { shaders, flames, altarCam, tips } = useMemo(() => {

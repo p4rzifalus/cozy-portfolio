@@ -27,6 +27,7 @@ function saveFrames(): Plugin {
 // PORT comes from the preview launcher (.claude/launch.json, autoPort); default 5173
 export default defineConfig({
   plugins: [react(), saveFrames()],
+  define: { __BUILD__: JSON.stringify(Date.now().toString(36)) },   // src/version.ts: ?v= on data files
   base: "./",          // relative paths: works at the domain root (dev) and at /cozy-portfolio/ (GitHub Pages)
   server: { port: Number(process.env.PORT) || 5173, strictPort: !!process.env.PORT },
 });

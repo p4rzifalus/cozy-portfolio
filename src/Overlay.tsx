@@ -6,6 +6,7 @@ import { closeAll, store, useStore } from "./store";
 import { toggleMusic } from "./music";
 import Menu, { GyroHint } from "./Menu";
 import "./overlay.css";
+import { V } from "./version";
 
 // HTML on top of the 3D room: label at the cursor, project card, contacts note, meditation screen, music badge.
 export default function Overlay() {
@@ -156,7 +157,7 @@ interface Channel {
   posts: { id: number; url: string; date: string; title: string | null; text: string; photo: string | null }[];
 }
 let channelCache: Promise<Channel> | null = null;
-const loadChannel = () => (channelCache ??= fetch(BASE + "tg/channel.json").then((r) => r.json()));
+const loadChannel = () => (channelCache ??= fetch(BASE + "tg/channel.json" + V).then((r) => r.json()));
 const plural = (n: number, one: string, few: string, many: string) =>
   n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many;
 

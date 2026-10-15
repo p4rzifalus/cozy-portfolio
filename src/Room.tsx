@@ -12,6 +12,7 @@ import Meditation from "./Meditation";
 import { store } from "./store";
 import Book, { splitTopBook } from "./Book";
 import Laptop from "./Laptop";
+import { V } from "./version";
 
 const BASE = import.meta.env.BASE_URL + "room/";
 // detailed pictures: the brush-stroke noise on top of them reads as a second, overlapping image -> no strokes
@@ -72,8 +73,8 @@ export function toTexture(bmp: ImageBitmap, srgb: boolean) {
 }
 
 export default function Room() {
-  const site: SiteJson = JSON.parse(useLoader(THREE.FileLoader, BASE + "site.json") as string);
-  const gltf = useGLTF(BASE + "room.glb");
+  const site: SiteJson = JSON.parse(useLoader(THREE.FileLoader, BASE + "site.json" + V) as string);
+  const gltf = useGLTF(BASE + "room.glb" + V);
   const baked = Object.entries(site.objects).filter(([, v]) => v.kind === "baked") as [string, BakedInfo][];
   const files = useMemo(() => {
     const f: string[] = [];
@@ -83,9 +84,9 @@ export default function Room() {
     }
     return f;
   }, [baked.length]);
-  const bitmaps = useLoader(RawLoader, files.map((f) => BASE + f)) as ImageBitmap[];
-  const walls: WallsJson = JSON.parse(useLoader(THREE.FileLoader, BASE + "walls/walls.json") as string);
-  const [plaster, relief, decals] = useLoader(THREE.TextureLoader, ["plaster", "relief", "decals"].map((f) => BASE + "walls/" + f + ".webp"));
+  const bitmaps = useLoader(RawLoader, files.map((f) => BASE + f + V)) as ImageBitmap[];
+  const walls: WallsJson = JSON.parse(useLoader(THREE.FileLoader, BASE + "walls/walls.json" + V) as string);
+  const [plaster, relief, decals] = useLoader(THREE.TextureLoader, ["plaster", "relief", "decals"].map((f) => BASE + "walls/" + f + ".webp" + V));
 
   // materials: baked objects -> Painterly shader; self-lit parts keep their glTF materials (flicker via emissiveIntensity)
   const { shaders, emissive, bulbs } = useMemo(() => {
@@ -148,7 +149,7 @@ export default function Room() {
     });
     // the top book of the desk stack becomes its own clickable object (after the materials: it keeps the stack's)
     const books = site.objects.Desk_Books as BakedInfo | undefined;
-    if (books) splitTopBook(gltf.scene, BASE + books.albedo, gltf.scene.getObjectByName("Camera_01_Main")!.getWorldPosition(new THREE.Vector3()));
+    if (books) splitTopBook(gltf.scene, BASE + books.albedo + V, gltf.scene.getObjectByName("Camera_01_Main")!.getWorldPosition(new THREE.Vector3()));
     return { shaders, emissive, bulbs };
   }, [gltf, bitmaps, plaster, relief, decals]);
 

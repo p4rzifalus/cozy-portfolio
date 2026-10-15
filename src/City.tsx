@@ -2,6 +2,7 @@ import { useMemo, useRef } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { view as altarView } from "./Interact";
 import * as THREE from "three";
+import { V } from "./version";
 
 // The city behind the window: one painted picture cut into depth layers (blender/scripts/city_layers.py ->
 // public/room/city/<layer>.webp + layers.json: sky + far city, mid roofs, the big building, near roofs).
@@ -81,8 +82,8 @@ const frag = /* glsl */ `
 `;
 
 export default function City({ scene, camera }: { scene: THREE.Object3D; camera: THREE.Object3D }) {
-  const cfg: LayersJson = JSON.parse(useLoader(THREE.FileLoader, BASE + "layers.json") as string);
-  const maps = useLoader(THREE.TextureLoader, cfg.layers.map((l) => import.meta.env.BASE_URL + "room/" + l.file));
+  const cfg: LayersJson = JSON.parse(useLoader(THREE.FileLoader, BASE + "layers.json" + V) as string);
+  const maps = useLoader(THREE.TextureLoader, cfg.layers.map((l) => import.meta.env.BASE_URL + "room/" + l.file + V));
 
   const layers = useRef<{ mesh: THREE.Mesh; base: THREE.Matrix4; k: number; name: string }[]>([]);
   const origin = useRef(new THREE.Vector3());
