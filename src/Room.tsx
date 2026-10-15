@@ -13,8 +13,11 @@ import { store } from "./store";
 import Book, { splitTopBook } from "./Book";
 import Laptop from "./Laptop";
 import { V } from "./version";
+import { candleAt, swayFlame } from "./flame";
 
 const BASE = import.meta.env.BASE_URL + "room/";
+// the lantern flame is kept below 1 in Blender (AgX washes it to white); the site grade is darker -> brighter here
+const FLAME_GAIN = 2.0;
 // detailed pictures: the brush-stroke noise on top of them reads as a second, overlapping image -> no strokes
 const PICTURES = /^(Poster_|Sticker_|Contact_)/;
 
@@ -89,7 +92,7 @@ export default function Room() {
   const [plaster, relief, decals] = useLoader(THREE.TextureLoader, ["plaster", "relief", "decals"].map((f) => BASE + "walls/" + f + ".webp" + V));
 
   // materials: baked objects -> Painterly shader; self-lit parts keep their glTF materials (flicker via emissiveIntensity)
-  const { shaders, emissive, bulbs } = useMemo(() => {
+  const { shaders, emissive, bulbs, flames } = useMemo(() => {
     const bmp: Record<string, ImageBitmap> = {};
     files.forEach((f, i) => (bmp[f] = bitmaps[i]));
     const shaders: THREE.ShaderMaterial[] = [];
@@ -131,6 +134,7 @@ export default function Room() {
       }
     }
     const emissive: { mat: THREE.MeshStandardMaterial; base: number; src: string }[] = [];
+    const flames: { mat: THREE.MeshStandardMaterial; base: number; time: THREE.IUniform | null; amp: number }[] = [];
     const bulbs: { mat: THREE.MeshStandardMaterial; base: number }[] = [];
     gltf.scene.traverse((o) => {
       const mesh = o as THREE.Mesh;
@@ -145,12 +149,15 @@ export default function Room() {
       const src = site.emissive_source[m.name];
       // only the neon sign flickers (Pasha, 2026-10-13): lamp, screen and lantern stay steady
       if (src === "paw" && m.emissiveIntensity !== undefined) emissive.push({ mat: m, base: m.emissiveIntensity, src });
+      // Jack's lantern: the candle flame sways and flickers, the glass glows along a little
+      if (m.name === "M_Lantern_Flame" && !flames.some((f) => f.mat === m)) flames.push({ mat: m, base: m.emissiveIntensity * FLAME_GAIN, time: swayFlame(mesh, m, { amp: 1.7, tongues: true }), amp: 1.6 });
+      if (m.name === "M_Lantern_Glass_Lit" && !flames.some((f) => f.mat === m)) flames.push({ mat: m, base: m.emissiveIntensity, time: null, amp: 0.6 });
       if (src === "lamp" && m.emissiveIntensity !== undefined && !bulbs.some((b) => b.mat === m)) bulbs.push({ mat: m, base: m.emissiveIntensity });
     });
     // the top book of the desk stack becomes its own clickable object (after the materials: it keeps the stack's)
     const books = site.objects.Desk_Books as BakedInfo | undefined;
     if (books) splitTopBook(gltf.scene, BASE + books.albedo + V, gltf.scene.getObjectByName("Camera_01_Main")!.getWorldPosition(new THREE.Vector3()));
-    return { shaders, emissive, bulbs };
+    return { shaders, emissive, bulbs, flames };
   }, [gltf, bitmaps, plaster, relief, decals]);
 
   // flicker of the neon sign only: its baked light mask + the paw tubes. Lamp switch: lamp slot of the shader (lamp-off bake).
@@ -163,6 +170,8 @@ export default function Room() {
     L.k = on ? lampOn(L.since) : L.k * Math.exp(-dt * 30);
     for (const s of shaders) (s.uniforms.k.value as THREE.Vector4).set(L.k, 1, k.neon, 1);
     for (const e of emissive) e.mat.emissiveIntensity = e.base * (k as Record<string, number>)[e.src];
+    const c = candleAt(clock.elapsedTime);
+    for (const f of flames) { f.mat.emissiveIntensity = f.base * (1 + (c - 1) * f.amp); if (f.time) f.time.value = clock.elapsedTime; }
     for (const b of bulbs) b.mat.emissiveIntensity = b.base * L.k;
   });
 
@@ -174,7 +183,7 @@ export default function Room() {
       <Interact scene={gltf.scene} />
       <Inspect scene={gltf.scene} />
       <City scene={gltf.scene} camera={gltf.scene.getObjectByName("Camera_01_Main")!} />
-      {/* temporary project placeholders are not baked: a little real light for them */}
+      {/* the project placeholder (Project_02) is not baked: a little real light for it */}
       <ambientLight intensity={0.25} color={"#6a5cff"} />
       {lantern && <pointLight position={lantern.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.2, 0.2))} intensity={0.6} distance={1.5} color={"#ff8a3a"} />}
       <CameraRig gltf={gltf} lens={site.cameras.Camera_01_Main.lens} sensor={site.cameras.Camera_01_Main.sensor} />

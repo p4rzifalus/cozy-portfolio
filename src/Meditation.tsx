@@ -9,6 +9,7 @@ import { view } from "./Interact";
 import { store } from "./store";
 import { startMantra, stopMantra } from "./music";
 import { V } from "./version";
+import { candleAt, swayFlame } from "./flame";
 
 // Meditation: click on the incense -> the camera flies into its smoke, the smoke fills the screen, behind it the scene changes
 // to the altar (through a fade to black) (Buddha in the middle, incense burner, candle - from web-3d, baked like the room: blender/scripts/altar_build.py +
@@ -83,26 +84,7 @@ export default function Meditation({ room }: { room: THREE.Object3D }) {
       if (!mesh.isMesh || !m?.name) return;
       if (m.name.startsWith("M_Incense_Ember")) { m.color.copy(EMBER); m.emissive.copy(EMBER); m.emissiveIntensity = 2.2; }
       if (m.name.startsWith("M_Candle_Flame")) {
-        // the flame sways and stretches: vertices bend more the higher they are (base = bottom of the flame faces)
-        mesh.geometry.computeBoundingBox();
-        const bb = mesh.geometry.boundingBox!;
-        const time = { value: 0 };
-        m.onBeforeCompile = (sh) => {
-          sh.uniforms.fTime = time;
-          sh.uniforms.fBase = { value: bb.min.y };
-          sh.uniforms.fHeight = { value: Math.max(1e-4, bb.max.y - bb.min.y) };
-          sh.uniforms.fCenter = { value: new THREE.Vector2((bb.min.x + bb.max.x) / 2, (bb.min.z + bb.max.z) / 2) };
-          sh.vertexShader = "uniform float fTime; uniform float fBase; uniform float fHeight; uniform vec2 fCenter;\n" +
-            sh.vertexShader.replace("#include <begin_vertex>", `#include <begin_vertex>
-            float fh = clamp((transformed.y - fBase) / fHeight, 0.0, 1.0);
-            float sway = sin(fTime * 3.1) * 0.6 + sin(fTime * 7.3 + 1.3) * 0.3 + sin(fTime * 13.0) * 0.12;
-            float sway2 = sin(fTime * 2.3 + 0.7) * 0.6 + sin(fTime * 9.1) * 0.25;
-            float stretch = 1.0 + 0.12 * sin(fTime * 5.7) + 0.06 * sin(fTime * 11.0 + 2.0);
-            vec2 r = transformed.xz - fCenter;
-            transformed.xz = fCenter + r * (1.0 - 0.15 * fh * (stretch - 1.0) * 4.0) + vec2(sway, sway2) * fHeight * 0.18 * fh * fh;
-            transformed.y = fBase + (transformed.y - fBase) * stretch;`);
-        };
-        m.needsUpdate = true;
+        const time = swayFlame(mesh, m);
         flames.push({ mat: m, base: m.emissiveIntensity, time });
       }
     });
@@ -173,7 +155,7 @@ export default function Meditation({ room }: { room: THREE.Object3D }) {
 
     // candle flicker: flame + its light on the scene (mask)
     const t = clock.elapsedTime;
-    const candle = 1 + 0.1 * Math.sin(t * 7.3) * Math.sin(t * 2.1 + 1) + 0.06 * Math.sin(t * 17.0 + Math.sin(t * 3.0));
+    const candle = candleAt(t);
     for (const m of shaders) (m.uniforms.k.value as THREE.Vector4).set(1, 1, 1, candle);
     for (const f of flames) { f.mat.emissiveIntensity = f.base * candle; f.time.value = t; }
 
