@@ -203,7 +203,8 @@ function lampOn(t: number) {
 // TURN: edge zone (share of the half-width), speed (full turn per second at the very edge), softness of start/stop and limits.
 // Field of view by window width (CSS px): Blender lens up to `from`, `wideFov` (deg, horizontal) from `to` on.
 export const VIEW = { from: 1100, to: 1800, wideFov: 58 };
-export const TURN = { zone: 0.3, speed: 0.4, accel: 4.0, soft: 0.1 };
+export const TURN = { zone: 0.3, speed: 0.4, accel: 4.0, soft: 0.1, min: -0.45, max: 1.45 };
+// min / max: how far the head turns past camera 1 (desk, 0) and camera 2 (shelf, 1), in the same units (1 = camera 1 -> 2, ~52 deg)
 // Phone: GYRO.gain = camera turn per phone turn (1 = turn the phone by the same angle as the head, like a window into the room),
 // pitch = phone tilt (rad) for the full up/down parallax. Touch drag: `drag` = turn per screen width.
 // ZOOM: two fingers zoom in (up to `max`) inside the usual frame; one finger then pans, past the frame edge it turns the head.
@@ -297,6 +298,12 @@ function CameraRig({ gltf, lens, sensor }: { gltf: { scene: THREE.Object3D }; le
     // iOS Safari: no page zoom on top of ours
     const noGesture = (e: Event) => e.preventDefault();
     document.addEventListener("gesturestart", noGesture);
+    // iOS: a swipe that starts at the screen edge is "back" for the browser and cancels our drag -> keep edge swipes on the room
+    const edge = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (t && e.target instanceof HTMLCanvasElement && (t.clientX < 30 || t.clientX > window.innerWidth - 30)) e.preventDefault();
+    };
+    document.addEventListener("touchstart", edge, { passive: false });
     window.addEventListener("pointerdown", down);
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", up);
@@ -315,6 +322,7 @@ function CameraRig({ gltf, lens, sensor }: { gltf: { scene: THREE.Object3D }; le
     window.addEventListener("blur", out);
     return () => {
       document.removeEventListener("gesturestart", noGesture);
+      document.removeEventListener("touchstart", edge);
       window.removeEventListener("pointerdown", down);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
@@ -372,27 +380,29 @@ function CameraRig({ gltf, lens, sensor }: { gltf: { scene: THREE.Object3D }; le
     }
     // soft start and stop, and slowing down before the limits (camera 1 and camera 2)
     s.vel += (want - s.vel) * (1 - Math.exp(-dt * TURN.accel));
-    const room = s.vel > 0 ? 1 - s.turn : s.turn;
+    const room = s.vel > 0 ? TURN.max - s.turn : s.turn - TURN.min;
     const v = s.vel * THREE.MathUtils.clamp(room / TURN.soft, 0, 1);
-    s.turn = THREE.MathUtils.clamp(s.turn + v * dt, 0, 1);
+    s.turn = THREE.MathUtils.clamp(s.turn + v * dt, TURN.min, TURN.max);
     // finger drag
+    // the finger wins over the gyroscope: after a drag the gyroscope takes the new turn as its starting point
     if (pointer.drag) {
-      if (free) { s.turn = THREE.MathUtils.clamp(s.turn + pointer.drag, 0, 1); rig.target = null; }
+      if (free) { s.turn = THREE.MathUtils.clamp(s.turn + pointer.drag, TURN.min, TURN.max); rig.target = null; phone.current.ref = null; }
       pointer.drag = 0;
     }
+    const dragging = touches.current.size > 0;
     // phone orientation: turning the phone to the right turns the head to the shelf. The reference slides when the
     // phone goes past the limits, so after turning "too far" the way back starts at once.
     const ph = phone.current, gyro = store.get().gyro && ph.ok;
-    if (gyro && free && rig.target === null) {
+    if (gyro && free && rig.target === null && !dragging) {
       if (ph.ref === null) { ph.ref = ph.heading + (s.turn * pose.angle) / GYRO.gain; ph.pitch0 = ph.pitch; }
       let want = (wrap(ph.ref - ph.heading) * GYRO.gain) / pose.angle;
-      if (want < 0) { ph.ref -= (want * pose.angle) / GYRO.gain; want = 0; }
-      if (want > 1) { ph.ref -= ((want - 1) * pose.angle) / GYRO.gain; want = 1; }
+      if (want < TURN.min) { ph.ref -= ((want - TURN.min) * pose.angle) / GYRO.gain; want = TURN.min; }
+      if (want > TURN.max) { ph.ref -= ((want - TURN.max) * pose.angle) / GYRO.gain; want = TURN.max; }
       s.turn += (want - s.turn) * (1 - Math.exp(-dt * GYRO.smooth));
       // tilt: parallax up/down; the "level" slowly follows the way the phone is held
       ph.pitch0 += (ph.pitch - ph.pitch0) * (1 - Math.exp(-dt * 0.15));
       s.py += (THREE.MathUtils.clamp((ph.pitch - ph.pitch0) / GYRO.pitch, -1, 1) - s.py) * (1 - Math.exp(-dt * GYRO.smooth));
-    } else ph.ref = null;
+    } else if (!dragging) ph.ref = null;
     // menu: ease to a given turn
     if (rig.target !== null) {
       const d = rig.target - s.turn;
