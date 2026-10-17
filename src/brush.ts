@@ -71,7 +71,7 @@ function stroke({ w, h, seed, color, alpha, margin = 0.14, ends = 0.16 }: Stroke
     }
   }
   ctx.putImageData(img, 0, 0);
-  return c.toDataURL("image/png");
+  return c;
 }
 
 // ink blot: noisy round stain with a darker rim (dried ink), a few drops around
@@ -99,7 +99,7 @@ function blot(size: number, seed: number, color: [number, number, number], alpha
     img.data[i + 3] = a * alpha * 255 * (0.85 + 0.15 * hash(x + y * size, s));
   }
   ctx.putImageData(img, 0, 0);
-  return c.toDataURL("image/png");
+  return c;
 }
 
 export const INK: [number, number, number] = [40, 30, 50];      // dark plum ink, like the room's shadows
@@ -140,23 +140,33 @@ function prepare(img: HTMLImageElement, tint: [number, number, number], alpha: n
     if (a > 0.06) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
   }
   ctx.putImageData(d, 0, 0);
-  if (x1 <= x0 || y1 <= y0) return c.toDataURL("image/png");
+  if (x1 <= x0 || y1 <= y0) return c;
   const out = document.createElement("canvas");
   out.width = x1 - x0 + 1; out.height = y1 - y0 + 1;
   out.getContext("2d")!.drawImage(c, -x0, -y0);
-  return out.toDataURL("image/png");
+  return out;
 }
+
+const urls: Record<string, string> = {};
 
 export function paintUI() {
   const root = document.documentElement.style;
-  const url = (d: string) => `url(${d})`;
+  // The picture goes into the variable as a short blob: link, never as a data: URL. Megabytes of base64 inside
+  // CSS variables made every cursor move (it changes --mx/--my) re-resolve those strings: ~140 ms per move.
+  const put = (name: string, c: HTMLCanvasElement) => c.toBlob((b) => {
+    if (!b) return;
+    const old = urls[name];
+    urls[name] = URL.createObjectURL(b);
+    root.setProperty("--" + name, `url(${urls[name]})`);
+    if (old) URL.revokeObjectURL(old);
+  }, "image/png");
+  // the generated picture if there is one; the drawn stroke only when there is none (drawing costs time too)
   // file = which picture to repaint (one painted stroke can serve several colours)
-  const set = (name: string, tint: [number, number, number], alpha: number, drawn: () => string, file = name) => {
-    root.setProperty("--" + name, url(drawn()));
+  const set = (name: string, tint: [number, number, number], alpha: number, drawn: () => HTMLCanvasElement, file = name) => {
     const tryExt = (exts: string[]) => {
-      if (!exts.length) return;
+      if (!exts.length) { put(name, drawn()); return; }
       const img = new Image();
-      img.onload = () => root.setProperty("--" + name, url(prepare(img, tint, alpha)));
+      img.onload = () => put(name, prepare(img, tint, alpha));
       img.onerror = () => tryExt(exts.slice(1));
       img.src = TEX + file + exts[0];
     };

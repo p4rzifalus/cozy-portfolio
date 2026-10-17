@@ -22,14 +22,21 @@ export default function Overlay() {
     paintUI();
     const key = (e: KeyboardEvent) => { if (e.key === "Escape") closeAll(); };
     // plates lean a little after the cursor, like the camera parallax (--mx, --my = -1…1)
+    // at most once per frame: the mouse fires far more often than the screen redraws
+    let raf = 0, mx = 0, my = 0;
+    const apply = () => {
+      raf = 0;
+      ui.current?.style.setProperty("--mx", mx.toFixed(2));
+      ui.current?.style.setProperty("--my", my.toFixed(2));
+    };
     const move = (e: PointerEvent) => {
-      if (e.pointerType !== "mouse" || !ui.current) return;
-      ui.current.style.setProperty("--mx", (e.clientX / innerWidth * 2 - 1).toFixed(3));
-      ui.current.style.setProperty("--my", (e.clientY / innerHeight * 2 - 1).toFixed(3));
+      if (e.pointerType !== "mouse") return;
+      mx = e.clientX / innerWidth * 2 - 1; my = e.clientY / innerHeight * 2 - 1;
+      if (!raf) raf = requestAnimationFrame(apply);
     };
     window.addEventListener("keydown", key);
     window.addEventListener("pointermove", move);
-    return () => { window.removeEventListener("keydown", key); window.removeEventListener("pointermove", move); };
+    return () => { window.removeEventListener("keydown", key); window.removeEventListener("pointermove", move); cancelAnimationFrame(raf); };
   }, []);
 
   const back = mode.kind === "contacts" || (mode.kind === "book");
