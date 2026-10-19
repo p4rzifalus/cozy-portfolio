@@ -37,6 +37,8 @@ export default function Menu() {
   const gyro = useStore((s) => s.gyro);
   const phone = hasGyro();
   const [more, setMore] = useState(false);   // burger list open
+  const [toast, setToast] = useState<string | null>(null);   // short message on a plate (instead of the browser alert)
+  useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 4500); return () => clearTimeout(t); }, [toast]);
   const active: Partial<Record<MenuAction, boolean>> = { music, lamp: !lamp, reveal, gyro };
 
   // "show all" switches itself off after a while and on any click into the room
@@ -58,7 +60,7 @@ export default function Menu() {
       case "music": toggleMusic(); break;
       case "lamp": store.set({ lamp: !s.lamp }); switchClick(); break;
       case "meditation": store.set({ mode: { kind: "meditation" }, hovered: null }); break;
-      case "gyro": if (s.gyro) store.set({ gyro: false }); else if (!(await enableGyro())) alert("Гироскоп недоступен: телефон не дал разрешение."); break;
+      case "gyro": if (s.gyro) store.set({ gyro: false }); else if (!(await enableGyro())) setToast("Гироскоп недоступен: телефон не дал разрешение."); break;
     }
   };
 
@@ -90,13 +92,15 @@ export default function Menu() {
   const hidden = mode.kind !== "room";
   const pick = (id: MenuAction) => { setMore(false); act(id); };
   return (
+    <>
+    {toast && <div className="toast plate" role="status" onClick={() => setToast(null)}><i className="plate-bg" />{toast}</div>}
     <nav ref={nav} className={"menu" + (hidden ? " hidden" : "") + (more ? " open" : "")}>
       <i className="plate-bg" />
       {items.map((m) => m.main && (
         <button key={m.id} className={"main" + (active[m.id] ? " on" : "")} onClick={() => pick(m.id)}>
+          <Kbd k={m.key} />
           <Icon name={m.icon} />
           <em>{m.label}</em>
-          <Kbd k={m.key} />
         </button>
       ))}
       <button className={"burger" + (more ? " on" : "")} onClick={() => setMore(!more)} aria-label="Ещё" aria-expanded={more}>
@@ -107,13 +111,14 @@ export default function Menu() {
         <i className="plate-bg" />
         {items.map((m) => !m.main && (
           <button key={m.id} role="menuitem" className={active[m.id] ? "on" : ""} onClick={() => pick(m.id)}>
+            <Kbd k={m.key} />
             <Icon name={m.icon} />
             <em>{m.label}</em>
-            <Kbd k={m.key} />
           </button>
         ))}
       </div>
     </nav>
+    </>
   );
 }
 
@@ -131,9 +136,10 @@ export function GyroHint() {
   if (!show || gyro) return null;
   const close = () => { setShow(false); try { localStorage.setItem("gyroHint", "1"); } catch { /* */ } };
   return (
-    <div className="gyro-hint">
+    <div className="gyro-hint popup">
+      <i className="plate-bg" />
       <span>Поворачивай телефон, чтобы осмотреться</span>
-      <button onClick={async () => { if (asked.current) return; asked.current = true; await enableGyro(); close(); }}>Включить</button>
+      <button className="swash" onClick={async () => { if (asked.current) return; asked.current = true; await enableGyro(); close(); }}>Включить</button>
       <button className="ghost" onClick={close}>Не надо</button>
     </div>
   );

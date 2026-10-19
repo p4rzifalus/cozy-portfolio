@@ -118,8 +118,9 @@ function ProjectCard({ id }: { id: string }) {
 function Contacts() {
   return (
     <div className="backdrop" onClick={closeAll}>
-      <div className="note" onClick={(e) => e.stopPropagation()}>
-        <button className="close" onClick={closeAll} aria-label="Закрыть">×</button>
+      <div className="note popup" onClick={(e) => e.stopPropagation()}>
+        <i className="plate-bg" />
+        <i className="blot" />
         <h2>Напиши мне</h2>
         <p className="lead">Открыт к интересным задачам — продукт, игры, всё уютное.</p>
         <ul>
@@ -147,7 +148,7 @@ const href = (url: string) => (/^[a-z]+:/.test(url) ? url : BASE + url);
 
 // --- laptop: a little desktop laid onto the 3D screen (Laptop.tsx moves it every frame)
 const ICONS: Record<string, { glyph: string; bg: string }> = {
-  pdf: { glyph: "PDF", bg: "#c8553d" }, behance: { glyph: "Bē", bg: "#2f5fd0" }, dribbble: { glyph: "◍", bg: "#c94f7c" },
+  pdf: { glyph: "PDF", bg: "#c8553d" }, behance: { glyph: "Bē", bg: "#2f5fd0" }, dribbble: { glyph: "◍", bg: "#c94f7c" }, dprofile: { glyph: "D", bg: "#1f1f24" }, hh: { glyph: "hh", bg: "#d6001c" },
   linkedin: { glyph: "in", bg: "#2a6aa8" }, github: { glyph: "⌥", bg: "#3b3346" }, web: { glyph: "↗", bg: "#3f8f86" },
 };
 function LaptopScreen() {
@@ -169,8 +170,10 @@ function LaptopScreen() {
           <span>{time.toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" })}</span>
         </div>
         <div className="os-window">
-          <div className="os-title"><i /><i /><i /><span>портфолио</span></div>
+          <i className="plate-bg" />
+          <i className="blot" />
           <div className="os-body">
+            <div className="os-kicker">портфолио</div>
             <h1>{LAPTOP_TITLE}</h1>
             <p>Резюме, кейсы и профили — выбирай, куда заглянуть.</p>
             <div className="os-icons">

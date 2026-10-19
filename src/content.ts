@@ -14,13 +14,12 @@ export const HOTSPOTS: Record<string, { label: string; hint: string; parts: stri
   Desk_Book_Top: { label: "Пиксели души", hint: "мой телеграм-канал", parts: ["Desk_Book_Top"], action: "book" },
 };
 
-// Icons on the laptop screen. TODO(Pasha): real links. A file (resume PDF) -> put it into site/public/ and write
-// its name as url without a leading slash, e.g. "resume.pdf".
-export const LAPTOP_LINKS: { label: string; note: string; url: string; icon: "pdf" | "behance" | "dribbble" | "linkedin" | "github" | "web" }[] = [
+// Icons on the laptop screen. A file (resume PDF) -> put it into site/public/ and write its name as url without a leading slash.
+export const LAPTOP_LINKS: { label: string; note: string; url: string; icon: "pdf" | "behance" | "dprofile" | "hh" | "dribbble" | "linkedin" | "github" | "web" }[] = [
   { label: "Резюме.pdf", note: "опыт, навыки, контакты", url: "resume.pdf", icon: "pdf" },
-  { label: "Behance", note: "кейсы целиком", url: "https://www.behance.net/username", icon: "behance" },
-  { label: "Dribbble", note: "шоты и анимации", url: "https://dribbble.com/username", icon: "dribbble" },
-  { label: "LinkedIn", note: "профиль", url: "https://www.linkedin.com/in/username", icon: "linkedin" },
+  { label: "Behance", note: "кейсы целиком", url: "https://www.behance.net/p4rzifal", icon: "behance" },
+  { label: "Dprofile", note: "работы и профиль", url: "https://dprofile.ru/p4rzifal", icon: "dprofile" },
+  { label: "hh.ru", note: "резюме на hh", url: "https://spb.hh.ru/resume/b91ce6efff0d1f1b3a0039ed1f6c5258395230", icon: "hh" },
 ];
 export const LAPTOP_TITLE = "Паша — senior UX/UI-дизайнер";
 
@@ -61,11 +60,11 @@ export const PROJECTS: Record<string, Project> = {
   },
 };
 
-// TODO(Pasha): real contacts
+// Contacts (Pasha, 2026-10-19): nickname @p4rzifal everywhere
 export const CONTACTS: { label: string; value: string; url: string }[] = [
-  { label: "Telegram", value: "@username", url: "https://t.me/username" },
-  { label: "Почта", value: "mail@example.com", url: "mailto:mail@example.com" },
-  { label: "Behance", value: "behance.net/username", url: "https://behance.net/username" },
+  { label: "Telegram", value: "@p4rzifal", url: "https://t.me/p4rzifal" },
+  { label: "Почта", value: "pavel.arkhangelskiy@yandex.ru", url: "mailto:pavel.arkhangelskiy@yandex.ru" },
+  { label: "Behance", value: "@p4rzifal", url: "https://www.behance.net/p4rzifal" },
 ];
 
 // Menu (top of the screen; on phones at the bottom). Order = order on screen. key = hotkey, first letter of the English

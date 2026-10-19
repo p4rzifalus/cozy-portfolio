@@ -374,4 +374,80 @@ button.hint:hover em { color: #fff; text-shadow: 0 0 12px rgba(255, 200, 140, 0.
   .menu button.main { font-size: 13px; padding: 0 9px; gap: 6px; height: 44px; }
   .more { top: auto; bottom: calc(100% + 20px); transform-origin: 90% 100%; transform: translateY(10px) rotate(-1.2deg); }
 }
-@media (max-width: 420px) { .menu button.main svg, .menu button.main img { display: none; } }
+/* Computer (mouse): the keycap stands where the icon was, no icons. Phone (touch): icon + text, no keycaps
+   (keycaps are hidden on touch screens above). Pasha, 2026-10-19 */
+.menu .more button { grid-template-columns: auto 1fr; }
+@media (hover: hover) and (pointer: fine) {
+  .menu button.main svg, .menu button.main img, .menu .more button svg, .menu .more button img { display: none; }
+  .menu button.main .kbd, .menu .more button .kbd { transform: none; opacity: 1; justify-self: start; }
+  .menu button.main { padding: 0 14px 0 10px; gap: 9px; }
+}
+@media (hover: none) {
+  .menu button.main svg, .menu button.main img { width: 18px; height: 18px; }
+  .menu button.main { padding: 0 7px; gap: 5px; }
+}
+
+/* popups on painted plates (Pasha, 2026-10-19): gyroscope hint, short messages (toast), contacts.
+   Same recipe as the project card: a big panel stroke + the offset second stroke + hairlines. */
+.popup { isolation: isolate; position: fixed; color: var(--ink); background: none; border: 0; border-radius: 0; box-shadow: none;
+  backdrop-filter: none; }
+.popup .plate-bg { inset: -18px -24px; background-image: var(--panel), var(--panel); background-position: center, 52% 48%;
+  background-size: 100% 100%, 97% 98%; }
+.popup::after, .toast::after { content: ""; position: absolute; inset: 55% -6% -10px 30%; z-index: -2; pointer-events: none;
+  background: var(--stroke-1) center / 100% 100% no-repeat; opacity: 0.5; transform: rotate(-1.6deg); }
+.popup::before { content: ""; position: absolute; inset: -6px -14% -8px -8%; z-index: -1; pointer-events: none;
+  border-top: 1px solid rgba(240, 226, 200, 0.28); border-bottom: 1px solid rgba(240, 226, 200, 0.14); transform: rotate(-1.2deg) skewX(-10deg);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 15%, #000 70%, transparent); mask: linear-gradient(90deg, transparent, #000 15%, #000 70%, transparent); }
+.popup .swash { border: 0; border-radius: 0; background: var(--stroke-light) center / 100% 100% no-repeat; color: var(--dark); cursor: pointer;
+  padding: 11px 30px 12px 22px; margin: 0; font: 700 14px/1 var(--sans); }
+
+.gyro-hint.popup { left: 26px; right: 26px; padding: 16px 16px 14px; gap: 10px 16px; font: 600 15px/1.35 var(--sans);
+  transform: rotate(-0.8deg); animation: popup-in 0.5s both cubic-bezier(.2,.8,.2,1); }
+.gyro-hint.popup button.ghost { padding: 8px 6px; background: none; border: 0; color: var(--ink-dim); font: 600 14px var(--sans); }
+@keyframes popup-in { from { opacity: 0; transform: translateY(14px) rotate(-3deg); } }
+
+.toast { position: fixed; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom)); width: max-content; max-width: min(360px, calc(100vw - 72px));
+  padding: 12px 22px; transform: translateX(-50%) rotate(-1deg); font: 600 14px/1.35 var(--sans); color: var(--ink); text-align: center;
+  pointer-events: auto; animation: fade 0.3s both; }
+.toast .plate-bg { inset: -10px -26px; background-image: var(--stroke-0), var(--stroke-2); }
+@media (hover: hover) and (pointer: fine) { .toast { bottom: auto; top: 96px; } }
+
+/* contacts: was a yellow sticky note, now a plate like the project card */
+.note.popup { position: relative; width: min(360px, 84vw); padding: 30px 30px 24px; color: var(--ink);
+  transform: perspective(900px) rotateY(calc(var(--mx, 0) * 4deg)) rotateX(calc(var(--my, 0) * -3deg)) rotate(-1deg);
+  animation: popup-in 0.5s both cubic-bezier(.2,.8,.2,1); transition: transform 0.6s ease-out; }
+.note.popup::before { width: auto; height: auto; margin: 0; background: none; }   /* no tape strip of the old sticky note */
+.note.popup .plate-bg { inset: -26px -34px; }
+.note.popup .blot { position: absolute; right: -50px; top: -60px; width: 200px; height: 200px; z-index: -1; pointer-events: none;
+  background: var(--blot) center / contain no-repeat; transform: translate(calc(var(--mx, 0) * 8px), calc(var(--my, 0) * 6px)); }
+.note.popup h2 { color: var(--ink); }
+.note.popup .lead { color: var(--ink-dim); opacity: 1; }
+.note.popup li { border-top: 1px solid rgba(240, 226, 200, 0.14); }
+.note.popup li span { color: var(--ink-dim); opacity: 1; }
+.note.popup a { color: var(--amber); }
+.backdrop { background: rgba(6, 4, 14, 0.35); }
+
+/* laptop "portfolio" window on a painted plate, like the other popups (Pasha, 2026-10-19). Sizes are in screen px:
+   the whole desktop is 1200 px wide (640 on phones) and is laid onto the 3D screen by Laptop.tsx. */
+.os-window { isolation: isolate; overflow: visible; background: none; color: var(--ink); border-radius: 0; box-shadow: none;
+  transform: translate(-50%, -50%) rotate(-0.8deg); }
+.os-window .plate-bg { inset: -40px -56px; transform: none;
+  background-image: var(--panel), var(--panel); background-position: center, 52% 48%; background-size: 100% 100%, 97% 98%; }
+.os-window::after { content: ""; position: absolute; inset: 62% -8% -24px 34%; z-index: -2; pointer-events: none;
+  background: var(--stroke-1) center / 100% 100% no-repeat; opacity: 0.5; transform: rotate(-1.6deg); }
+.os-window .blot { position: absolute; right: -60px; top: -80px; width: 300px; height: 300px; z-index: -1; pointer-events: none;
+  background: var(--blot) center / contain no-repeat; }
+.os-kicker { color: var(--amber); font: 700 16px var(--sans); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px; }
+.os-body h1 { color: var(--ink); }
+.os-body p { color: var(--ink-dim); }
+.os-icons a { border-radius: 0; color: var(--ink); }
+.os-icons a:hover { background: var(--stroke-hover) center / 112% 100% no-repeat; transform: translateY(-3px) rotate(-0.6deg); }
+.os-icons a:hover small { color: #e6d8c6; }
+.os-icons b { border-radius: 0; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.25), inset 0 -4px 0 rgba(0, 0, 0, 0.3);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 18px 100%, 0 calc(100% - 18px)); }
+.os-icons small { color: var(--ink-dim); }
+.laptop-screen.small .os-window { border-radius: 0; }
+.laptop-screen.small .os-window .plate-bg { inset: -20px -26px; }
+.laptop-screen.small .os-window .blot { width: 180px; height: 180px; right: -30px; top: -50px; }
+.laptop-screen.small .os-kicker { font-size: 13px; margin-bottom: 6px; }
+.laptop-screen.small .os-icons b { border-radius: 0; clip-path: polygon(0 0, 100% 0, 100% 100%, 14px 100%, 0 calc(100% - 14px)); }
